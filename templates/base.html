@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Bitcoin | Lightning Bytes</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <header>
+    <nav>
+      <div>
+        <span id="name"><a href="/">Vladimir Fomene</a></span>
+        <span id="github" class="social-icon"><a href="https://github.com/vladimirfomene"><i class="fa fa-github-square"
+              style="font-size:48px;"></i></a></span>
+        <span id="twitter" class="social-icon"><a href="https://twitter.com/Vlad_kwasi"><i class="fa fa-twitter"
+              style="font-size:48px;"></i></a></span>
+        <span id="linkedin" class="social-icon"><a href="https://www.linkedin.com/in/vladimirfomene/"><i
+              class="fa fa-linkedin" style="font-size:48px;"></i></a></span>
+      </div>
+    </nav>
+  </header>
+  <aside>
+    <ul>
+      <li><a href="{{ get_url(path="@/blog/_index.md") }}">Blog</a></li>
+      <li><a href="{{ get_url(path="@/project/_index.md") }}">Projects</a></li>
+      <li><a href="{{ get_url(path="@/talk/_index.md") }}">Talks</a></li>
+    </ul>
+  </aside>
+  <section class="section">
+    <div class="container">
+      {% block content %} {% endblock %}
+    </div>
+  </section>
+</body>
+
+</html>
