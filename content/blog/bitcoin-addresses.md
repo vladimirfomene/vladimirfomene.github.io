@@ -1,0 +1,174 @@
++++
+title = "Bitcoin Addresses"
+date = 2022-04-18
++++
+
+Welcome back to the blog! Today we will explore how Bitcoin Addresses are formed and how they are represented. 
+
+### Introduction
+
+What are Bitcoin addresses anyway? Let's start with an analogy, Bitcoin is a decentralized bank of some sort. The best way to think about a Bitcoin address is to see it as a bank account number. It is a number used as a reference to your funds. Like most banks where you can have more than one bank account number, in the Bitcoin system you can have more than one Bitcoin address. 
+
+### Address Utility
+
+Addresses contain a public key which is used to track who owns what on the Bitcoin system. In a Bitcoin transaction, the receiver of the funds is referenced using this public key which is part of the receiver's address. In a transaction where you are receiving funds, you have to give your Bitcoin address to the sender and the sender's wallet software will generate and sign a transaction to your address' public key. This will then be broadcasted to the Bitcoin network. Now that we have a good understanding of the utility of addresses, let's see how we can generate one.
+
+### Generating Private Key
+
+Before generating an address, we will first have to generate its public key. Additionally, before generating a public key, we will first have to generate a private key. So how do we generate a private key? First, we start by generating a cryptographically secure random number, in most systems, this means generating a key using your operating system as your source of randomness. To do that, we will generate 256 bytes (I choose this arbitrarily, just make sure the randomness is bigger than 256 bits) of randomness from the OS' cryptographically secure random number generator. After generating this entropy, we will generate a SHA256 digest from it. SHA256 because it produces keys which are 256 bits and the Bitcoin System requires our private key to be 256 bits. We have to make sure that this private key is less than the order of Bitcoin's elliptic curve, denoted in the code as `n`. This process will look like this in Python.
+
+```python
+import os
+import hashlib
+
+
+# Constants
+
+n = 115792089237316195423570985008687907852837564279074904382605163141518161494337
+
+  
+# 1. Generate randomness and hash it with sha256 algorithm.
+
+private_key = None
+
+while True:
+
+	entropy = os.urandom(256)
+
+	private_key = hashlib.sha256(entropy).hexdigest()
+
+	if int(private_key, 16) < n:
+		break
+
+break
+```
+
+After this process, your `private_key` variable will now contain a cryptographically secure private key in hexadecimal. 
+
+> Please don't use this private key for real Bitcoin transactions. The code snippet above is strictly for educational purposes.
+
+### Generating Public Key
+
+Now that we have a private key, we need to generate our public key from this private key. To do that, we multiply our private key with the generator point of the [secp256k1  elliptic curve](https://www.secg.org/sec2-v2.pdf). Since our private key is just a big random number, we can mathematically multiply with a point on this curve.  For the elliptic curve, we pulled [James D'Angelo's implementation](https://github.com/wobine/blackboard101/blob/master/EllipticCurvesPart4-PrivateKeyToPublicKey.py) and just ported it to Python 3. Once we do that, we can import it in our project.
+
+```python
+...
+import elliptic # Elliptic curve from James D'Angelo
+
+# Constants
+
+.....
+
+generator = (
+
+55066263022277343669578718895168534326250603453777594175500187360389116729240,
+
+32670510020758816978083085130507043184471273380659243275938904335757337482424
+
+)
+
+# 2. Calculate the Public key from the Private key with Elliptic Curve.
+
+public_key = elliptic.EccMultiply(generator,int(private_key, 16))
+
+```
+
+With this in place, your public key should now be in the `public_key` variable. This is just a point with X and Y coordinates on the elliptic curve. The `generator` used in the variable was copied from the secp256k1 standard document above and converted from hexadecimal to decimal.
+
+### Private Key Format
+
+Although our hexadecimal private key is valid, it is not the recommended format expected by wallet software when instantiating a wallet from the private key. The format expected by this software is called Wallet Import Format (WIP for short). This format is divided into four parts.
+**version-number**-**payload**-**suffix**-**checksum**
+
+- The version number informs wallet software which type of key this is. For private keys, the version number is **0x80**.
+- The payload is the hexadecimal form of the key as we generated it in the previous section.
+-  The suffix indicates whether this key is compressed or not compressed. **0x01** for compressed keys and it is left empty for uncompressed keys.
+-  The checksum helps the wallet software detect if the key has been transcribed correctly into the software.
+	
+WIP requires these four parts to be Base58 encoded. Once concatenated and encoded using Base58 encoding, the uncompressed private keys start with the number 5 while the compressed private keys start with K or L. Here is what implementing from our hexadecimal private key looks like:
+
+```python
+..........
+import base58
+from binascii import unhexlify as decode_hex
+
+# 3. Generate a compressed and uncompressed private key
+
+def generate_base58_format(payload, prefix, suffix = ""):
+	hash256 = hashlib.sha256(decode_hex(prefix + payload)).hexdigest()
+	checksum = hashlib.new('ripemd160', decode_hex(hash256)).hexdigest()
+	checksum = checksum[:8]
+	formatted_key = prefix + payload + suffix + checksum
+	return base58.b58encode(decode_hex(formatted_key))
+
+
+wip_key_compressed = generate_base58_format(private_key, "80", "01")
+wip_key_uncompressed = generate_base58_format(private_key, "80")
+
+print("WIP Private key Compressed:", wip_key_compressed)
+print("WIP Private key Uncompressed:", wip_key_uncompressed)
+
+```
+
+Notice the importation of two new libraries at the top of the script. You will have to download `base58` for the encoding. `binascii` is part of the system, you don't have to download it. Did you notice that the compressed version of the key is bigger than the uncompressed version? What is that all about? We use compressed here to mean that compressed public keys can be generated from the compressed private keys and uncompressed public keys can be generated from uncompressed private keys.
+
+### Public Key Format
+
+Now that we started talking about public keys, you might be wondering how to format them. They have the same format as the private key except that their suffix is always empty. The payload is also different depending on whether it is a compressed or uncompressed key. 
+
+#### Uncompressed Public Keys
+
+- Version number is **0x04**
+- Payload is a concatenation of the X and Y coordinate of the point.
+- Suffix is empty
+- Checksum is calculated as in the case of private keys.
+
+
+#### Compressed Public keys
+
+To move from uncompressed keys to compressed keys, we discard the Y coordinate of our point. This is because we can always re-compute it from the elliptic curve. 
+
+- The version number of the compressed public key is **0x02** if the Y coordinate is even and **0x03** if the Y coordinate is odd. 
+- The payload is just the X coordinate
+- Suffix is empty 
+- Checksum is calculated as in the case of private keys.
+
+
+### Generating Bitcoin Address
+
+With all this knowledge, let's now generate a compressed and uncompressed public key. Then, we can generate their Bitcoin addresses. The following code does exactly that:
+
+```python
+# we slice from index 2 because we don't want the string "0x" to be part of the key. Same 
+# reason everywhere else.
+uncompressed_public_key = "04" + hex(public_key[0])[2:] + hex(public_key[1])[2:]
+# we compute prefix which will be used for our public key
+prefix_compressed_public_key = "02" if public_key[1] % 2 == 0 else "03"
+
+compressed_public_key = prefix_compressed_public_key + hex(public_key[0])[2:]
+print("Uncompressed Public key: ", uncompressed_public_key)
+print("Compressed Public key: ", compressed_public_key)
+
+  
+
+print("Uncompressed Bitcoin Address: ", generate_base58_format(hex(public_key[0])[2:] + hex(public_key[1])[2:], "04"))
+print("Compressed Bitcoin Address: ", generate_base58_format(hex(public_key[0])[2:], prefix_compressed_public_key))
+
+```
+
+### Other Address Types
+
+There is another class of addresses that we haven't looked at called Pay-To-Script-Hash addresses. These addresses are generated by calculating the following hash:
+
+`hash = RIPEMD160(SHA256(script))` 
+
+Then encoding this hash with base58 checksum with a version prefix of 5. They usually start with "3" after encoding.
+
+### Conclusion
+
+In this post, we explored how to generate a private key from a cryptographically secure source of entropy, we used this private key to generate public keys and finally saw how we could format both private and public keys. The addresses shown in this post are considered legacy addresses as most Bitcoin wallets no longer use them. Nowadays, most wallets used SEGWIT addresses which are encoded using Bech32. These might be the subject of a future post. Stay tuned!
+
+### Resources
+- [Elliptic Curve Standard documentation](https://www.secg.org/sec2-v2.pdf)
+-  [Mastering Bitcoin, Andreas Antonopoulos](https://github.com/bitcoinbook/bitcoinbook/blob/develop/ch04.asciidoc)
+-  [Lear Me a Bitcoin](https://learnmeabitcoin.com/technical/public-key)
