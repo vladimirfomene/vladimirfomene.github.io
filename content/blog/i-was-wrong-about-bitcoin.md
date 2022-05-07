@@ -4,6 +4,7 @@ date = 2022-04-11
 +++
 
 #### Introduction
+
 Welcome to my blog, I'm Vladimir Fomene, a Bitcoin/Lightning developer in training at [Qala Africa](https://qala.dev/). This is going to be one of many blog posts from me as I share my learning about Bitcoin and Lightning. 
 
 Today, I'm going to tell you why I didn't initially adopt Bitcoin even though I heard about it in 2014. Then, we will talk about events that led to changing my mind and finally why I decided to adopt it. These opinions are just my thoughts about Bitcoin after spending some time researching it, it is not investment advice.
@@ -25,6 +26,7 @@ In 2021, the [GameSpot stock story](https://inewsnetwork.net/9027/investigations
 Still during the pandemic, there was a resurfacing of the fight against the [francs CFA](https://www.bceao.int/en/content/history-cfa-franc). Most people no longer want to use this currency but our governments in Africa are not making any effort to cut ties with the French and create our currency. Just like the EndSARS protest, the expectations of the people are at odds with the actions of their governments. What other options do citizens have? I thought to myself. In case you want to learn more about the unfairness of this francs CFA system, you can read more [here](https://bitcoinmagazine.com/culture/bitcoin-a-currency-of-decolonization)
 
 #### Why do you now believe in Bitcoin
+
 With the unfolding of the events above, it became clear to me that we had given governments too much power and they could abuse it through their misactions or actions. The people must take back some of that power or have systems that can keep their governments in check. 
 
 [Cypherpunks](https://nakamoto.com/the-cypherpunks/) had been trying to reduce government control over citizens by building a digital currency that was not controlled by a central entity. Bitcoin was only a product of past failed attempts at this.
@@ -41,12 +43,15 @@ Last but not the least, Bitcoin is building a fairer financial system as it is a
 
 
 #### What are you doing with this new knowledge?
+
 With this newfound knowledge, I decided to quit my job to take part in a three months developer training program organized by [Qala Africa](https://qala.dev/). I will love to contribute to projects trying to stabilize Bitcoin because I think this has the potential of increasing adoption in Africa.
 
 #### Conclusion
+
 In this article, I have explained why I didn't initially adopt Bitcoin, despite having known about the technology for a while now. Then, I dived into events that led me to reconsider my stance on Bitcoin and finally gave reasons why I think Bitcoin has a lot of value to offer to the world. If you found this interesting, you can continue learning using one of the links in the resources section.
 
 #### Resources
+
 [Buycoins'](https://buycoins-learning.teachable.com/p/introduction-to-bitcoin) Bitcoin course.
 [Hello Bitcoin learning resources](https://hellobitco.in/)
 [Stablecoins on Lightning](https://lightning.engineering/posts/2022-4-5-taro-launch/)
