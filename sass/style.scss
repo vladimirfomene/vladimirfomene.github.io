@@ -65,7 +65,13 @@ main {
 #section {
     margin-top: 80px;
     margin-left: 220px;
-    padding-right: 20px
+    padding-right: 20px;
+    font-size: 25px;
+    width: 70%;
+}
+
+pre {
+    overflow: auto;
 }
 
 .social-icon {

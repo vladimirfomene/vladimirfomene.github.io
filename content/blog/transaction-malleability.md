@@ -19,7 +19,7 @@ transaction data structure. Bitcoin transactions can either be represented in a 
 
 To understand this format, we are going to divide it into fields made up of one or many hexadecimal characters. The table below shows the name, size, data and description of each field in the transaction above.
 
-![Transaction Data Structure](./transaction-datastructure.png)
+![Transaction Data Structure](/images/transaction-datastructure.png)
 
 [Image Source](https://learnmeabitcoin.com/technical/transaction-data)
 
