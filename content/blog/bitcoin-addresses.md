@@ -7,11 +7,11 @@ Welcome back to the blog! Today we will explore how Bitcoin Addresses are formed
 
 ### Introduction
 
-What are Bitcoin addresses anyway? Let's start with an analogy, Bitcoin is a decentralized bank of some sort. The best way to think about a Bitcoin address is to see it as a bank account number. It is a number used as a reference to your funds. Like most banks where you can have more than one bank account number, in the Bitcoin system you can have more than one Bitcoin address. 
+What are Bitcoin addresses anyway? Bitcoin is a decentralized network of computers that secures the funds of all the users of the network. Where do these funds live you might wonder? They live at your Bitcoin address. These addresses are like single-use (they could be used multiple times but it is not advised for privacy reasons) invoices that are issued by a receiver to a sender each time parties create a transaction. The best way to think about a Bitcoin address is to see it as a place on the network where your funds can live. As a user of the Bitcoin network, you can have more than one Bitcoin address.
 
 ### Address Utility
 
-Addresses contain a public key which is used to track who owns what on the Bitcoin system. In a Bitcoin transaction, the receiver of the funds is referenced using this public key which is part of the receiver's address. In a transaction where you are receiving funds, you have to give your Bitcoin address to the sender and the sender's wallet software will generate and sign a transaction to your address' public key. This will then be broadcasted to the Bitcoin network. Now that we have a good understanding of the utility of addresses, let's see how we can generate one.
+In this article, we are going to be focusing on a particular group of Bitcoin Addresses called Pay-to-Public-Key-Hash addresses(P2PKH). These addresses contain a public key which can be used as an ownership identifier for funds on the Bitcoin network. In a Bitcoin transaction, the receiver of the funds can be referenced using their public key which is part of the receiver's address. In a transaction where you are receiving funds, you have to give your Bitcoin address to the sender and the sender's wallet software will generate and sign a transaction that assigns some bitcoins to your address. This transaction will then be broadcasted to the Bitcoin network. Now that we have a good understanding of the utility of addresses, let's see how we can generate one.
 
 ### Generating Private Key
 
