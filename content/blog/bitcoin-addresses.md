@@ -3,7 +3,7 @@ title = "Bitcoin Addresses"
 date = 2022-04-18
 +++
 
-Welcome back to the blog! Today we will explore how Bitcoin Addresses are formed and how they are represented. 
+Welcome back to the blog! Today we will explore how Bitcoin Addresses are formed and how they are represented. You can find the repository for the code at the bottom of the article.
 
 ### Introduction
 
@@ -169,5 +169,6 @@ In this post, we explored how to generate a private key from a cryptographically
 
 ### Resources
 - [Elliptic Curve Standard documentation](https://www.secg.org/sec2-v2.pdf)
--  [Mastering Bitcoin, Andreas Antonopoulos](https://github.com/bitcoinbook/bitcoinbook/blob/develop/ch04.asciidoc)
--  [Lear Me a Bitcoin](https://learnmeabitcoin.com/technical/public-key)
+- [Mastering Bitcoin, Andreas Antonopoulos](https://github.com/bitcoinbook/bitcoinbook/blob/develop/ch04.asciidoc)
+- [Learn Me a Bitcoin](https://learnmeabitcoin.com/technical/public-key)
+- [Python Bitcoin Addresses Repo](https://github.com/vladimirfomene/python-addresses)
