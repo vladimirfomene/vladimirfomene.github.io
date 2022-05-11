@@ -77,15 +77,15 @@ With this in place, your public key should now be in the `public_key` variable. 
 
 ### Private Key Format
 
-Although our hexadecimal private key is valid, it is not the recommended format expected by wallet software when instantiating a wallet from the private key. The format expected by this software is called Wallet Import Format (WIP for short). This format is divided into four parts.
-**version-number**-**payload**-**suffix**-**checksum**
+Although our hexadecimal private key is valid, it is not the recommended format expected by wallet software when instantiating a wallet from the private key. The format expected by this software is called Wallet Import Format (WIF for short). This format is divided into four parts.
+**version : payload : suffix : checksum**
 
-- The version number informs wallet software which type of key this is. For private keys, the version number is **0x80**.
+- The version informs wallet software which type of key this is. For private keys, the version number is **0x80**.
 - The payload is the hexadecimal form of the key as we generated it in the previous section.
 -  The suffix indicates whether this key is compressed or not compressed. **0x01** for compressed keys and it is left empty for uncompressed keys.
 -  The checksum helps the wallet software detect if the key has been transcribed correctly into the software.
 	
-WIP requires these four parts to be Base58 encoded. Once concatenated and encoded using Base58 encoding, the uncompressed private keys start with the number 5 while the compressed private keys start with K or L. Here is what implementing from our hexadecimal private key looks like:
+WIF requires these four parts to be Base58 encoded. Once concatenated and encoded using Base58 encoding, the uncompressed private keys start with the number 5 while the compressed private keys start with K or L. Here is what implementing from our hexadecimal private key looks like:
 
 ```python
 ..........
@@ -102,15 +102,19 @@ def generate_base58_format(payload, prefix, suffix = ""):
 	return base58.b58encode(decode_hex(formatted_key))
 
 
-wip_key_compressed = generate_base58_format(private_key, "80", "01")
-wip_key_uncompressed = generate_base58_format(private_key, "80")
+wif_key_compressed = generate_base58_format(private_key, "80", "01")
+wif_key_uncompressed = generate_base58_format(private_key, "80")
 
-print("WIP Private key Compressed:", wip_key_compressed)
-print("WIP Private key Uncompressed:", wip_key_uncompressed)
+print("WIF Private key Compressed:", wif_key_compressed)
+print("WIF Private key Uncompressed:", wif_key_uncompressed)
 
 ```
 
-Notice the importation of two new libraries at the top of the script. You will have to download `base58` for the encoding. `binascii` is part of the system, you don't have to download it. Did you notice that the compressed version of the key is bigger than the uncompressed version? What is that all about? We use compressed here to mean that compressed public keys can be generated from the compressed private keys and uncompressed public keys can be generated from uncompressed private keys.
+Notice the importation of two new libraries at the top of the script. You will have to download `base58` for the encoding. `binascii` is part of the system, you don't have to download it. Did you notice that the compressed version of the key is bigger than the uncompressed version? What is that all about? We use compressed here to mean that compressed public keys can be generated from the compressed private keys and uncompressed public keys can be generated from uncompressed private keys. This reduces the number of public keys a wallet creates when you import a WIF private key as it can use this suffix to determine whether to generate a compressed public key or uncompressed public key. In the original Bitcoin software, the wallet supported Pay-To-Pubkey (P2PK) and Pay-To-Pubkey hash (P2PKH) addresses. If the suffix was not added, it means the wallets will have to search funds using four types of public keys: uncompressed_P2PK, compressed_P2PK, uncompressed_P2PKH and compressed_P2PKH. With the WIF suffix, wallets will reduce the types of keys used for fund search by 3. With the default key pool size of 1000 in Bitcoin Core, this will reduce the key types searched by 3000. This is a huge performance boost for large wallets with hundreds of thousands of addresses because it reduces the amount of processing required for funds associated with the wallet's key when a new block is received. 
+
+### Base58 and Base58Check Encoding
+
+The keys above are Base58Check encoded. What does that even mean? To represent long numbers compactly, many computer systems used alphanumeric representations. For example, `1000000` in decimal is `F4240` in hexadecimal, we went from seven characters to five characters. To represent Bitcoin addresses compactly, Bitcoin encodes them using Base 58 characters. This means characters in Bitcoin addresses can be between 0 and 57. Here are the characters in the base58 alphabet: `123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz`. **0** is represented by **1** and **57** by **z** in Base58. For Base58Check, it means instead of just encoding the number for which we want a compact representation, we will append a checksum to it before encoding. In Bitcoin, the checksum is the first four bytes of the `RIPEMD160(SHA256(prefix + payload))` where the prefix is the version and the payload is the private key. In the code above, we are using the first 8 characters because the hash is in hexadecimal and a byte is equivalent to two hexadecimal characters. Since the checksum is derived from the hash of the encoded data, it can be used to detect errors in Bitcoin addresses. For example, when a user mistypes an address in a wallet.
 
 ### Public Key Format
 
@@ -161,14 +165,16 @@ There is another class of addresses that we haven't looked at called Pay-To-Scri
 
 `hash = RIPEMD160(SHA256(script))` 
 
-Then encoding this hash with base58 checksum with a version prefix of 5. They usually start with "3" after encoding. Aside from this, SEGWIT also introduced two new address types, Pay-To-Witness-Script-Hash (P2WSH) and Pay-To-Witness-Public-Key-Hash (P2WPKH).
+Then encoding this hash with base58 checksum with a version prefix of 5. They usually start with "3" after encoding. Aside from this, SegWit also introduced two new address types, Pay-To-Witness-Script-Hash (P2WSH) and Pay-To-Witness-Public-Key-Hash (P2WPKH).
 
 ### Conclusion
 
-In this post, we explored how to generate a private key from a cryptographically secure source of entropy, we used this private key to generate public keys and finally saw how we could format both private and public keys. The addresses shown in this post are considered legacy addresses as most Bitcoin wallets no longer use them. Nowadays, most wallets used SEGWIT addresses which are encoded using Bech32. These might be the subject of a future post. Stay tuned!
+In this post, we explored how to generate a private key from a cryptographically secure source of entropy, we used this private key to generate public keys and finally saw how we could format both private and public keys. The addresses shown in this post are considered legacy addresses as most Bitcoin wallets no longer use them. Nowadays, most wallets use SegWit addresses which are encoded using Bech32 instead of the Base58 encoding used above. These might be the subject of a future post. Stay tuned!
 
 ### Resources
+
 - [Elliptic Curve Standard documentation](https://www.secg.org/sec2-v2.pdf)
 - [Mastering Bitcoin, Andreas Antonopoulos](https://github.com/bitcoinbook/bitcoinbook/blob/develop/ch04.asciidoc)
 - [Learn Me a Bitcoin](https://learnmeabitcoin.com/technical/public-key)
 - [Python Bitcoin Addresses Repo](https://github.com/vladimirfomene/python-addresses)
+- [Why do WIF-compressed private keys exist?](https://www.reddit.com/r/Bitcoin/comments/g46nvw/why_do_wifcompressed_private_keys_exist/)
