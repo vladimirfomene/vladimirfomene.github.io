@@ -7,11 +7,11 @@ Welcome back to the blog! Today we will explore how Bitcoin Addresses are formed
 
 ### Introduction
 
-What are Bitcoin addresses anyway? Bitcoin is a decentralized network of computers that secures the funds of all the users of the network. Where do these funds live you might wonder? They live at your Bitcoin address. These addresses are like single-use (they could be used multiple times but it is not advised for privacy reasons) invoices that are issued by a receiver to a sender each time parties create a transaction. The best way to think about a Bitcoin address is to see it as a place on the network where your funds can live. As a user of the Bitcoin network, you can have more than one Bitcoin address.
+What are Bitcoin addresses anyway? Bitcoin is a decentralized network of computers which secures the funds of all the users of the network. Where do these funds live you might wonder? They live at your Bitcoin address. These addresses are like single-use (they could be used multiple times but it is not advised for privacy reasons) invoices that are issued by a receiver to a sender in a transaction. The best way to think about a Bitcoin address is to see it as a place on the network where your funds can live. As a user of the Bitcoin network, you can have more than one Bitcoin address.
 
 ### Address Utility
 
-In this article, we are going to be focusing on a particular group of Bitcoin Addresses called Pay-to-Public-Key-Hash addresses(P2PKH). These addresses contain a public key which can be used as an ownership identifier for funds on the Bitcoin network. In a Bitcoin transaction, the receiver of the funds can be referenced using their public key which is part of the receiver's address. In a transaction where you are receiving funds, you have to give your Bitcoin address to the sender and the sender's wallet software will generate and sign a transaction that assigns some bitcoins to your address. This transaction will then be broadcasted to the Bitcoin network. Now that we have a good understanding of the utility of addresses, let's see how we can generate one.
+In this article, we are going to be focusing on a particular group of Bitcoin Addresses called Pay-to-Public-Key-Hash addresses(P2PKH). In a Bitcoin transaction where you are receiving funds, you have to give your Bitcoin address to the sender and the sender's wallet software will generate and sign a transaction that assigns some bitcoins to your address. This transaction will then be broadcasted to the Bitcoin network. Now that we have a good understanding of the utility of addresses, let's see how we can generate one.
 
 ### Generating Private Key
 
@@ -149,10 +149,9 @@ compressed_public_key = prefix_compressed_public_key + hex(public_key[0])[2:]
 print("Uncompressed Public key: ", uncompressed_public_key)
 print("Compressed Public key: ", compressed_public_key)
 
-  
-
-print("Uncompressed Bitcoin Address: ", generate_base58_format(hex(public_key[0])[2:] + hex(public_key[1])[2:], "04"))
-print("Compressed Bitcoin Address: ", generate_base58_format(hex(public_key[0])[2:], prefix_compressed_public_key))
+# When generating Bitcoin addresses from public keys, we have to add a "00" prefix during the #encoding.
+print("Uncompressed Bitcoin Address: ", generate_base58_format(uncompressed_public_key, "00"))
+print("Compressed Bitcoin Address: ", generate_base58_format(compressed_public_key, "00"))
 
 ```
 
@@ -162,7 +161,7 @@ There is another class of addresses that we haven't looked at called Pay-To-Scri
 
 `hash = RIPEMD160(SHA256(script))` 
 
-Then encoding this hash with base58 checksum with a version prefix of 5. They usually start with "3" after encoding.
+Then encoding this hash with base58 checksum with a version prefix of 5. They usually start with "3" after encoding. Aside from this, SEGWIT also introduced two new address types, Pay-To-Witness-Script-Hash (P2WSH) and Pay-To-Witness-Public-Key-Hash (P2WPKH).
 
 ### Conclusion
 
