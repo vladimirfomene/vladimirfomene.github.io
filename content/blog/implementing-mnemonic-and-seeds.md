@@ -3,8 +3,6 @@ title = "Implementing Mnemonics & Seeds in Rust : BIP 39"
 date = 2022-05-13
 +++
 
-# Implementing Mnemonics & Seeds in Rust : BIP 39
-
 ## Introduction
 
 A mnemonic is a system/device that helps with retention. This could be a pattern of letters, words, a phrase or even ideas. In our particular scenario we are trying to remember a very large number called a seed. This seed is used by wallets to derive all your keys and therefore calculate your balance. When you download a wallet software, most wallets to make you store a list of either 12 or 24 words as a backup for the wallet. With this setup, if you decide to suddenly change wallet software you can use this word list on the new wallet to recover your keys and calculate your balance. This list of words is of called a mnemonic because it helps us remember or recover the seed. 
