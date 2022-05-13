@@ -1,4 +1,9 @@
-# Implementing Mnemonics  &  Seeds in Rust : BIP 39
++++
+title = "Implementing Mnemonics & Seeds in Rust : BIP 39"
+date = 2022-05-13
++++
+
+# Implementing Mnemonics & Seeds in Rust : BIP 39
 
 ## Introduction
 
