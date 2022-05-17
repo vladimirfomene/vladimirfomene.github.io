@@ -5,9 +5,9 @@ date = 2022-05-13
 
 ## Introduction
 
-A mnemonic is a system/device that helps with retention. This could be a pattern of letters, words, a phrase or even ideas. In our particular scenario we are trying to remember a very large number called a seed. This seed is used by wallets to derive all your keys and therefore calculate your balance. When you download a wallet software, most wallets to make you store a list of either 12 or 24 words as a backup for the wallet. With this setup, if you decide to suddenly change wallet software you can use this word list on the new wallet to recover your keys and calculate your balance. This list of words is of called a mnemonic because it helps us remember or recover the seed. 
+A mnemonic is a system/device that helps with retention. This could be a pattern of letters, words, a phrase or even ideas. In our particular scenario we are trying to remember a very large number called a seed. This seed is used by wallets to derive all your keys and therefore calculate your balance. When you download a wallet software, most wallets make you store a list of either 12 or 24 words as a backup for the wallet. With this setup, if you decide to suddenly change wallet software you can use this word list on the new wallet to recover your keys and calculate your balance. This list of words is called a mnemonic because it helps us remember or recover the seed. 
 
-These wallets are able to recover your keys because they all implement the improvements in BIP 39. Though they mostly use 12 and 24 words. According to the BIP 39, it is also possible to use 15, 18 and 21 words.  Next, we will be looking at how we can generate our own mnemonic. To follow along download the codebase for the article [here](https://github.com/vladimirfomene/bip39).
+Wallets that implement BIP 39 are able to recover your keys from the mnemonic. Most of them use 12 or 24 words, but it is also possible to use 15, 18 and 21 words.  Next, we will be looking at how we can generate our own mnemonic. To follow along download the codebase for the article [here](https://github.com/vladimirfomene/bip39).
 
 ## Generate entropy
 
@@ -63,11 +63,11 @@ impl Entropy {
 }
 ```
 
-In the function, we make sure the bits used to generate entropy have are between 128 and 256 in size. There is also a check to make sure the size of these bits is a multiple of 32. There after, we fill the vector of bytes by calling our cryptographically secured random number generator. Since we have a vector of bytes and not bits, our vector's length has to be size divided by the `BYTE_SIZE` . You can check the values of constants in the `util.rs` module.
+In the function, we make sure the bits used to generate entropy have are between 128 and 256 in size. This is enough bits to make sure that two people don't generate thesame entropy. There is also a check to make sure the size of these bits is a multiple of 32. Thirty two because it allows us to easily split the entropy in pieces and convert them to words. There after, we fill the vector of bytes by calling our cryptographically secured random number generator. Since we have a vector of bytes and not bits, our vector's length has to be `size` divided by the `BYTE_SIZE` . You can check the values of constants in the `util.rs` module.
 
 ## From Entropy Generate Checksum
 
-According to the BIP, assuming the length in bits of the entropy is `ENT`. The checksum is the first `ENT / 32` bits of the SHA256 hash of the entropy.  For all our possible entropy len, we can have the following checksums:
+According to the BIP, assuming the length in bits of the entropy is `ENT`. The checksum is the first `ENT / 32` bits of the SHA256 hash of the entropy.  For all our possible entropy len, we can have the following checksum size:
 
 <pre>
 Let checksum size be, CS = ENT / 32.
@@ -84,7 +84,7 @@ The checksum size for all entropy length is as follows:
 
 [Table Source](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki)
 
-On the table we see that irrespective of the entropy length we choose, our word size will never be more than 8 (a byte). So to get the checksum, we generate a SHA256 hash of the entropy and take the first Byte.  Here is the code to generate the checksum from the entropy:
+On the table we see that irrespective of the entropy length we choose, our checksum size will never be more than 8 (a byte). So to get the checksum, we generate a SHA256 hash of the entropy and take the first Byte.  Here is the code to generate the checksum from the entropy:
 
 ```rust
 fn generate_checksum(ent: Entropy) -> Vec<u8> {
@@ -102,7 +102,7 @@ fn generate_checksum(ent: Entropy) -> Vec<u8> {
 
 ## Get Mnemonic from entropy and checksum
 
-Now that we have an entropy and a checksum, we can generate a mnemonic. Let the word count of a mnemonic be `WC`. The word count for each entropy length is calculated like `WC = (ENT + CS) / 11` where `ENT` is the entropy length and `CS` is the checksum's length. This can be represented with the following table:
+Now that we have an entropy and its checksum, we can calculate a mnemonic. Let the word count of a mnemonic be `WC`. The word count for each entropy length is calculated like `WC = (ENT + CS) / 11` where `ENT` is the entropy length and `CS` is the checksum's length. This can be represented with the following table:
 
 <pre>
 WC = (ENT + CS) / 11
@@ -118,7 +118,7 @@ WC = (ENT + CS) / 11
 
 [Table Source](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki)
 
-Base on the formula for `WC` above we have divided our concatenated entropy and checksum bits into chunks of **11** bits. Therefore, our words are represented by 11 bits numbers. With a 11 bits we can represent 2048 numbers. These numbers can be from 0 to 2047. Each of these numbers is an index in our array of 2048 words found in `src/language/english.rs`. We used the following snippet of code from the `src/mnemonic.rs` module to generate our mnemonic words.
+Base on the formula for `WC` above we have divided our concatenated entropy and checksum bits into chunks of **11** bits. Therefore, our words are represented by 11 bits numbers. With 11 bits, we can represent 2048 (2^11) numbers. These numbers can be from 0 to 2047. Each of these numbers is an index in our array of 2048 words found in `src/language/english.rs`. This works because the word list is defined in the [spec](https://github.com/bitcoin/bips/blob/master/bip-0039/english.txt). If everyone created their own word list wallets won't be compatible. We used the following snippet of code from the `src/mnemonic.rs` module to generate our mnemonic words.
 
 ```rust
 impl Mnemonic {
@@ -201,7 +201,7 @@ impl Mnemonic {
 
 ## Generate Seed from Mnemonic
 
-With the above code, we have been able to generate our list of mnemonic words from our english wordlist. Now we are going to pass our mnemonics through a password based key derivation function (PBKDF2 for short).  This key derivation function uses HMAC-SHA512 as its pseudo-random function. The `password` that we are going to hash is the mnemonic sentence. The salt is the  `"mnemonic" + passphrase` where the passphrase can be empty. We are going to use 2048 iterations in our PBKDF2. One important thing to mention here is that the `salt` and `password` have to be UTF-8 normalized before passing it to this function. Here is the code snippet for generating a seed from a mnemonic.
+With the above code, we have been able to generate our list of mnemonic words from our english wordlist. Now we are going to pass our mnemonics through a password based key derivation function (PBKDF2 for short).  This key derivation function uses HMAC-SHA512 as its pseudo-random function. The `password` that we are going to hash is the mnemonic sentence. The salt is the  `"mnemonic" + passphrase` where the passphrase can be empty. This algorithm(PBKDF2) will produce different seeds from the same mnemonic if given different passphrases. We are going to use 2048 iterations in our PBKDF2. This just refers to the number of times we are going to be hashing. One important thing to mention here is that the `salt` and `password` have to be UTF-8 normalized before passing it to this function. Normalization is important because it prevents our program from treating words looking thesame differently because they have different Unicode representation. See more [here](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/normalize). Here is the code snippet for generating a seed from a mnemonic.
 
 ```rust
 pub (crate) fn compute_seed(mnemonic: Vec<String>, passphrase: &str) -> Vec<u8>{
@@ -238,7 +238,7 @@ pub (crate) fn compute_seed(mnemonic: Vec<String>, passphrase: &str) -> Vec<u8>{
 
 ## Conclusion
 
-In this article, we have shown how to move from entropy, to checksum, to mnemonic and from mnemonic to seed. Mnemonic is a list of words used as backup by wallets. By backup, I mean it can be used by any wallet software to recover your keys and therefore calculate your balance.
+In this article, we have shown how to move from entropy, to checksum, to mnemonic and from mnemonic to seed. A BIP39 Mnemonic is a list of words used as backup by wallets. By backup, I mean it can be used by any BIP39 compatible wallet software to recover your keys and therefore calculate your balance.
 
 ## References
 
