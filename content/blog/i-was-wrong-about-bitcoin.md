@@ -3,12 +3,16 @@ title = "I was wrong about Bitcoin"
 date = 2022-04-11
 +++
 
-![I was wrong about Bitcoin](https://res.cloudinary.com/vladimirfomene/image/upload/v1653067103/blog/i-was-wrong-about-bitcoin.jpg)
+
 #### Introduction
+
+![I was wrong about Bitcoin](https://res.cloudinary.com/vladimirfomene/image/upload/v1653067103/blog/i-was-wrong-about-bitcoin.jpg)
 
 Welcome to my blog, I'm Vladimir Fomene, a Bitcoin/Lightning developer in training at [Qala Africa](https://qala.dev/). This is going to be one of many blog posts from me as I share my learning about Bitcoin and Lightning. 
 
 Today, I'm going to tell you why I didn't initially adopt Bitcoin even though I heard about it in 2014. Then, we will talk about events that led to changing my mind and finally why I decided to adopt it. These opinions are just my thoughts about Bitcoin after spending some time researching it, it is not investment advice.
+
+
 
 #### What was your previous stance on Bitcoin
 

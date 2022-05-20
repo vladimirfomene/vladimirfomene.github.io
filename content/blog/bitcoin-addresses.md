@@ -3,13 +3,16 @@ title = "Bitcoin Addresses"
 date = 2022-04-18
 +++
 
-![Bitcoin Addresses](https://res.cloudinary.com/vladimirfomene/image/upload/v1653067088/blog/addresses.png)
+
 
 Welcome back to the blog! Today we will explore how Bitcoin Addresses are formed and how they are represented. You can find the repository for the code at the bottom of the article.
 
 ### Introduction
 
+![Bitcoin Addresses](https://res.cloudinary.com/vladimirfomene/image/upload/v1653069616/blog/addresses.png)
+
 What are Bitcoin addresses anyway? Bitcoin is a decentralized network of computers which secures the funds of all the users of the network. Where do these funds live you might wonder? They live at your Bitcoin address. These addresses are like single-use (they could be used multiple times but it is not advised for privacy reasons) invoices that are issued by a receiver to a sender in a transaction. The best way to think about a Bitcoin address is to see it as a place on the network where your funds can live. As a user of the Bitcoin network, you can have more than one Bitcoin address.
+
 
 ### Address Utility
 
