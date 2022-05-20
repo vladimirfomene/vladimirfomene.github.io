@@ -3,6 +3,7 @@ title = "I was wrong about Bitcoin"
 date = 2022-04-11
 +++
 
+![I was wrong about Bitcoin](https://res.cloudinary.com/vladimirfomene/image/upload/v1653067103/blog/i-was-wrong-about-bitcoin.jpg)
 #### Introduction
 
 Welcome to my blog, I'm Vladimir Fomene, a Bitcoin/Lightning developer in training at [Qala Africa](https://qala.dev/). This is going to be one of many blog posts from me as I share my learning about Bitcoin and Lightning. 

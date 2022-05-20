@@ -3,6 +3,8 @@ title = "Bitcoin Addresses"
 date = 2022-04-18
 +++
 
+![Bitcoin Addresses](https://res.cloudinary.com/vladimirfomene/image/upload/v1653067088/blog/addresses.png)
+
 Welcome back to the blog! Today we will explore how Bitcoin Addresses are formed and how they are represented. You can find the repository for the code at the bottom of the article.
 
 ### Introduction
