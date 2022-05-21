@@ -3,10 +3,10 @@
 
 <head>
   <meta charset="utf-8">
-  <meta property='og:title' content='{{ page.title }}'/>
-  <meta property='og:image' content='{{ page.image }}'/>
-  <meta property='og:description' content='{{ page.description }}'/>
-  <meta property='og:url' content='{{ page.url }}'/>
+  <meta property='og:title' content='{{ page.title or section.title }}'/>
+  <meta property='og:image' content='{{ page.image or section.image }}'/>
+  <meta property='og:description' content='{{ page.description or section.description }}'/>
+  <meta property='og:url' content='{{ page.url or section.url }}'/>
   <title>Bitcoin | Lightning Bytes</title>
   <link rel="stylesheet" href="/style.css">
 </head>
