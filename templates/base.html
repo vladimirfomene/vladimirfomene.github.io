@@ -4,9 +4,9 @@
 <head>
   <meta charset="utf-8">
   <meta property='og:title' content='{% if page.title %}{{ page.title }}{% endif %}'/>
-  <meta property='og:image' content='{% if page.image %}{{ page.image }}{% endif %}'/>
+  <meta property='og:image' content='{% if not page.image %}{{ page.image }}{% endif %}'/>
   <meta property='og:description' content='{% if page.description %}{{ page.description }}{% endif %}'/>
-  <meta property='og:url' content='{% if page.url %}{{ page.url }}{% endif %}'/>
+  <meta property='og:url' content='{% if not page.url %}{{ page.url }}{% endif %}'/>
   <title>Bitcoin | Lightning Bytes</title>
   <link rel="stylesheet" href="/style.css">
 </head>
