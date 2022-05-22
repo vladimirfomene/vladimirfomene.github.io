@@ -1,16 +1,15 @@
 +++
 title = "Implementing Mnemonics & Seeds in Rust : BIP 39"
 date = 2022-05-13
-image = "https://res.cloudinary.com/vladimirfomene/image/upload/v1653069616/blog/addresses.png"
-description = "These addresses are like single-use (they could be used multiple times but it is not advised for privacy reasons) invoices that are issued by a receiver to a sender in a transaction"
-url = "https://www.vladimirfomene.com/blog/bitcoin-addresses/"
+description = "A mnemonic is a system/device that helps with retention. This could be a pattern of letters, words, a phrase or even ideas. In our particular scenario we are trying to remember a very large number called a seed. This seed is used by wallets to derive all your keys and therefore calculate your balance."
+[extra]
+	url = "https://www.vladimirfomene.com/blog/implementing-mnemonic-and-seeds/"
+	image = "https://res.cloudinary.com/vladimirfomene/image/upload/c_scale,w_1180/v1653069239/blog/mnemonic.jpg"
 +++
 
 
 
 ## Introduction
-
-![Mnemonic Words](https://res.cloudinary.com/vladimirfomene/image/upload/c_scale,h_796,w_1285/v1653069239/blog/mnemonic.jpg)
 
 A mnemonic is a system/device that helps with retention. This could be a pattern of letters, words, a phrase or even ideas. In our particular scenario we are trying to remember a very large number called a seed. This seed is used by wallets to derive all your keys and therefore calculate your balance. When you download a wallet software, most wallets make you store a list of either 12 or 24 words as a backup for the wallet. With this setup, if you decide to suddenly change wallet software you can use this word list on the new wallet to recover your keys and calculate your balance. This list of words is called a mnemonic because it helps us remember or recover the seed. 
 

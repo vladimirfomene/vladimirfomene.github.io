@@ -1,9 +1,10 @@
 +++
 title = "Coinjoin"
 date = 2022-05-16
-image = "https://res.cloudinary.com/vladimirfomene/image/upload/v1653069616/blog/addresses.png"
-description = "These addresses are like single-use (they could be used multiple times but it is not advised for privacy reasons) invoices that are issued by a receiver to a sender in a transaction"
-url = "https://www.vladimirfomene.com/blog/bitcoin-addresses/"
+description = "Coinjoin is a protocol or mechanism for increasing the privacy of Bitcoin users by mixing inputs from multiple parties in a transaction"
+[extra]
+    image = "https://res.cloudinary.com/vladimirfomene/image/upload/v1653223611/blog/coinjoin.jpg"
+    url = "https://www.vladimirfomene.com/blog/coinjoin/"
 +++
 
 ## Introduction

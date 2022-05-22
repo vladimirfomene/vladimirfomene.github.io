@@ -1,16 +1,15 @@
 +++
 title = "Implications of Bitcoin Dust Limit on Lightning Channels"
 date = 2022-05-03
-image = "https://res.cloudinary.com/vladimirfomene/image/upload/v1653069616/blog/addresses.png"
-description = "These addresses are like single-use (they could be used multiple times but it is not advised for privacy reasons) invoices that are issued by a receiver to a sender in a transaction"
-url = "https://www.vladimirfomene.com/blog/bitcoin-addresses/"
+description = "In the Lightning network whenever nodes create payments below the dust limit, the payment is not executed in a trustless manner using HTLCs. In this scenario, nodes work with trust between each other"
+[extra]
+  image = "https://res.cloudinary.com/vladimirfomene/image/upload/c_scale,w_1028/v1653069070/blog/bitcoin-dust.jpg"
+  url = "https://www.vladimirfomene.com/blog/implications-of-bitcoin-dust-on-lightning/"
 +++
 
 
 
 ### Introduction
-
-![Bitcoin Dust](https://res.cloudinary.com/vladimirfomene/image/upload/v1653069070/blog/bitcoin-dust.jpg)
 
 Welcome back to the blog! This week, I'm taking you on a debugging journey where we will be learning about Bitcoin dust, how it is calculated and its implication for the Lightning network. Before we dive into the meat of the subject, let me set the stage. This week while trying to open a payment channel from an [LDK](https://lightningdevkit.org/) node to an [LND](https://github.com/lightningnetwork/lnd) node setup in [Polar](https://lightningpolar.com/), I had the following error:
 

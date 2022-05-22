@@ -1,15 +1,14 @@
 +++
 title = "I was wrong about Bitcoin"
 date = 2022-04-11
-image = "https://res.cloudinary.com/vladimirfomene/image/upload/v1653069616/blog/addresses.png"
-description = "These addresses are like single-use (they could be used multiple times but it is not advised for privacy reasons) invoices that are issued by a receiver to a sender in a transaction"
-url = "https://www.vladimirfomene.com/blog/bitcoin-addresses/"
+description = "Today, I'm going to tell you why I didn't initially adopt Bitcoin even though I heard about it in 2014. Then, we will talk about events that led to changing my mind and finally why I decided to adopt it. These opinions are just my thoughts about Bitcoin after spending some time researching it, it is not investment advice."
+[extra]
+    url = "https://www.vladimirfomene.com/blog/i-was-wrong-about-bitcoin/"
+    image = "https://res.cloudinary.com/vladimirfomene/image/upload/v1653067103/blog/i-was-wrong-about-bitcoin.jpg"
 +++
 
 
 #### Introduction
-
-![I was wrong about Bitcoin](https://res.cloudinary.com/vladimirfomene/image/upload/v1653067103/blog/i-was-wrong-about-bitcoin.jpg)
 
 Welcome to my blog, I'm Vladimir Fomene, a Bitcoin/Lightning developer in training at [Qala Africa](https://qala.dev/). This is going to be one of many blog posts from me as I share my learning about Bitcoin and Lightning. 
 

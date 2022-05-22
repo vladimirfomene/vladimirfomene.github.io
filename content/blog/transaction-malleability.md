@@ -1,9 +1,10 @@
 +++
 title = "Transaction Malleability"
 date = 2022-04-25
-image = "https://res.cloudinary.com/vladimirfomene/image/upload/v1653069616/blog/addresses.png"
 description = "These addresses are like single-use (they could be used multiple times but it is not advised for privacy reasons) invoices that are issued by a receiver to a sender in a transaction"
-url = "https://www.vladimirfomene.com/blog/bitcoin-addresses/"
+[extra]
+    image = "https://res.cloudinary.com/vladimirfomene/image/upload/c_scale,w_1039/v1653223416/blog/malleability.jpg"
+    url = "https://www.vladimirfomene.com/blog/transaction-malleability/"
 +++
 
 ### Introduction
@@ -108,7 +109,7 @@ An attacker cannot change inputs and outputs of a transaction using malleability
 
 If not fixed, transaction malleability will have also been an issue for the Lightning network as nodes on Lightning track the confirmations on a 2-of-2 multisig transaction (funding transaction) using the transaction Id to declare a channel open.
 
-This attack was claimed to have been used against many Bitcoin exchanges back in 2014. Most notably Mt.Gox, which was the largest Bitcoin exchange at the time claimed to have been rendered insolvent because of this attack. Though the attack was real in 2014, this [paper ](https://arxiv.org/abs/1403.6676) proves that there was no widespread use of this attack before the closing of Mt.Gox in February 2014. 
+This attack was claimed to have been used against many Bitcoin exchanges back in 2014. Most notably Mt.Gox, which was the largest Bitcoin exchange at the time claimed to have been rendered insolvent because of this attack. Though the attack was real in 2014, this [paper](https://arxiv.org/abs/1403.6676) proves that there was no widespread use of this attack before the closing of Mt.Gox in February 2014. 
 
 ### Conclusion
 
