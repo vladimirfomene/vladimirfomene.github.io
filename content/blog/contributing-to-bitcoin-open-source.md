@@ -18,14 +18,26 @@ To take this issue, I commented on it asking if anyone was working on it and one
 
 In a communication with one of the project maintainers, they asked if I wanted to review the PR because I had worked on it and had a lot of expertise about it. Without a second thought, I agreed. After making some suggestions in my review, the creator of the PR asked if I wanted to add those improvements. I agreed, and worked on a small improvement with companion test and pushed it to their branch. 
 
-Looking back, I believe my ego got in the way of our teamwork at some time, which is why I asked if I could work on it alone. I also felt cheated in the process because I believed we were going to discuss and agree on what each of us would work on, but the other party shared with me a nearly finished patch. Last but not least, I have no way of knowing if they drew inspiration for their implementation from my code. This is because the BIP technique is quite standard, therefore it makes sense for all implementations to appear similar. Overall, I believe I should have responded more slowly in the moment, since this would have given me more time to consider the best reaction. It was also pointless to complain about it on the PR because I had previously spoken to one of the maintainers about it. Most importantly, I should have discussed it with my mentor.
-
-
+Looking back, I believe my ego got in the way of our teamwork at some time, which is why I asked if I could work on it alone. I also felt cheated in the process because I believed we were going to discuss and agree on what each of us would work on, but the other party shared with me a nearly finished patch. Part of my frustration is because I was doing this on the side in addition to my already intense [Qala](https://qala.dev/) curriculum. This means, I could not dedicate as much time as I will have loved to this issue. Last but not least, I have no way of knowing if they drew inspiration for their implementation from my code. This is because the BIP technique is quite standard, therefore it makes sense for all implementations to appear similar. Overall, I should have responded more slowly in the moment, since this would have given me more time to consider the best reaction. It was also pointless to complain about it on the PR because I had previously spoken to one of the maintainers about it. Most importantly, I should have discussed it with my mentor.
 
 
 ## Lessons learned contributing
 
-While working on this first contribution, I have learned both technical skills and interpersonal skills. Let me start by outlining the technical skills I learned in the process.
+While working on this first contribution, I have learned both technical skills and interpersonal skills. Let me start by outlining the non-technical skills I learned in the process.
+
+* As a contributor, it is always important to ask yourself, the following question: "What is in the best interest of the project?" whenever you are unsure of what action to take. 
+
+* If you are unsure how to deal with a particular circumstance, reach out to a mentor or anyone senior in the field for advice.
+
+* Try as much as possible to put your ego out of the way when it comes to working with others. If you feel cheated in any way, reach out to a mentor and ask them what to do. If you don't have a mentor you can reach out to one of the maintainers for advice.
+
+* Contributing to open source is about giving to a project. It does not have to be about code contribution. For example, you could contribute my improving documentation, or writing new documentation for newly created features.
+
+* While interacting with others online, be slow to respond. Time will generally give you room to respond without reactive energy.
+
+* Last but not least, you are on a marathon and not a sprint so if you make a mistake in the process of contributing pick yourself up and continue finding other issues and other avenues to contribute. If your intention is genuine, it will generally be appreciated in the long run. 
+
+Having looked at the non-technical lessons I learned while contributing to this project, let's now look at the technical lessons learned.
 
 * It turns outs that reviewing pull requests are as important or even more important than opening a pull request. Opening a PR means someone else will have to review your code while you don't need anyone's collaboration to review a PR. Reviewing PRs are low hanging fruits to contributing to projects in the space. In case you are thinking of reviewing a PR, this [Jon Atack's article](https://jonatack.github.io/articles/how-to-review-pull-requests-in-bitcoin-core) is a great place to learn how to. 
 
@@ -37,13 +49,6 @@ While working on this first contribution, I have learned both technical skills a
 
 * Start by reading the contribution guidelines of the project you want to contribute to, they are usually in the `CONTRIBUTION.md` file in the root directory of the project.
 
-So these are the technical lessons I learned while doing this contribution. Now let's look at the non-technical lessons learned.
-
-* As a contributor, it is always important to ask yourself, the following question: "What is in the best interest of the project?" whenever you are unsure of what action to take. 
-
-* If you are unsure how to deal with a particular circumstance, reach out to a mentor or anyone senior in the field for advice.
-
-* Try as much as possible to put your ego out of the way when it comes to working with others. If you feel cheated in any way, reach out to a mentor and ask them what to do. If you don't have a mentor you can reach out to one of the maintainers for advice.
 
 
 ## Other Avenues for Contributing to Bitcoin/Lightning
@@ -58,3 +63,5 @@ So these are the technical lessons I learned while doing this contribution. Now 
 ## Conclusion
 
 Contributing to open-source Bitcoin projects is a great way to contribute to Bitcoin's adoption as most of these projects are used by developers to develop products for end-users. In addition, it is also a great way to create a relationship with people in the community and build a reputation for yourself. When you start contributing if you have any doubts, reach out to one of your mentors or a maintainer on the project. If you reach out to a maintainer, be respectful of their time as most engineers don't get paid to work on these projects full time. 
+
+Thank you Jonas for the review and feedback.
