@@ -1,3 +1,12 @@
++++
+title = "Lessons Learned Contributing to Bitcoin Open Source"
+description = "This week, I'm going to share my experience making my first contribution to a Bitcoin open-source project and the lessons learned while going through the process. In addition, I will like to convince you that contributing to a Bitcoin/Lightning open source project is something you should consider."
+date = 2022-05-26
+[extra]
+	image = "https://res.cloudinary.com/vladimirfomene/image/upload/c_scale,w_1200/v1653570051/blog/open-source.jpg" 
+	url =  "https://www.vladimirfomene.com/blog/contributing-to-bitcoin-open-source/"
++++
+
 ## Introduction
 
 Welcome back to my blog! This week, I'm going to share my experience making my first contribution to a Bitcoin open-source project and the lessons learned while going through the process. In addition, I will like to convince you that contributing to a Bitcoin/Lightning open source project is something you should consider. 
