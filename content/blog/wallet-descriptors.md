@@ -11,8 +11,7 @@ Welcome back to the blog! This week we are going to be looking at the issues tha
 
 ## Introduction
 
-To the everyday Bitcoin user, wallets seem to be working fairly well and can easily be backed up thanks to BIP39 mnemonic phrases. Though the tree of keys wallet or the wallet generated from the mnemonic phrase often called the legacy wallet works well, it has a couple of shortcomings. Due to these shortcomings, BIP380 was proposed to resolve some of the issues faced by
-the current wallet architecture.
+To the everyday Bitcoin user, wallets seem to be working fairly well and can easily be backed up thanks to BIP39 mnemonic phrases. Though the "tree of keys" wallet or the wallet generated from the mnemonic phrase often called the legacy wallet works well, it has a couple of shortcomings. Due to these shortcomings, [BIP380](https://github.com/bitcoin/bips/blob/master/bip-0380.mediawiki) was proposed to resolve some of the issues faced by the current wallet architecture.
 
 ## Why  Wallet Descriptors
 
@@ -23,7 +22,7 @@ As a consequence, wallet restoration is very computationally intensive, for each
 Although, BIP44, BIP49 and BIP84 provide standard derivation paths to be used by all wallets, not every wallet supports these BIPs. As a direct consequence, some wallets will not be able to
 derive a user's balance given a BIP39 mnemonic phrase as they might be using a different derivation path from the wallet that produced the backup. This is will create an illusion of a loss of funds for a user thereby providing a very poor user experience.
 
-Last but not the least, this current architecture also doesn't provide the mechanism for wallets to easily watch funds in a multisig. 
+This current architecture also doesn't provide the mechanism for wallets to easily watch funds in a multisig and perhaps most importantly to be able to monitor and sign transactions related to arbitrary scripts, without specific logic being added to every single wallet implementation.
 
 Last but not the least, with the advent of SEGWIT, wallets created new version bytes (version bytes are prepended to the 20 bytes of a public key to create different address types) to denote native SegWit addresses. With SEGWIT, wallets used `0x049d7cb2` for `ypub` which is an extended public key for wrapped SEGWIT addresses and `0x04b24746` for `zpub` which is an extended public key for native SegWit. Using prefixes like `xpub`, `ypub` and `zpub` are not sustainable in the long term as they are only so many letters in the alphabet.
 
@@ -50,15 +49,12 @@ This string has the following format:
 
 ## Drawbacks of Wallet descriptors
 
-Though descriptors are great at what they do, they will potentially make the import/export user experience for wallets not very friendly. This is because descriptors are easily readable to someone
-who is technical but it looks like code to someone who is not technical. It seems much easier for an average user to remember a mnemonic than to write down an output descriptor. It is important to note that wallet descriptors can be used alongside mnemonics when it comes to backing up a wallet. For example, the mnemonic could be used to restore the HD wallet and the descriptor could be used to restore a wallet with complex scripts like multisig.  There have been talks to convert these descriptors to base64 for backup/restore or even to create a new mnemonic system that works for them.
+Though descriptors are great at what they do, they will potentially make the import/export user experience for wallets not very friendly. This is because descriptors are easily readable to someone who is technical but it looks like code to someone who is not technical. It seems much easier for an average user to remember a mnemonic than to write down an output descriptor. It is important to note that wallet descriptors can be used alongside mnemonics when it comes to backing up a wallet. For example, the mnemonic could be used to restore the HD wallet and the descriptor could be used to restore a wallet with complex scripts like multisig.  There have been talks to convert these descriptors to base64 for backup/restore or even to create a new mnemonic system that works for them.
 
 ## Wallet descriptors in Bitcoin Core
 
 Core has had support for output descriptors since v17.0. In this section we are going to explore 
-a few Bitcoin Core commands with support for output descriptors. From Bitcoin Core v23.0.0, if you create a wallet with the CLI you will get a descriptor wallet unless `descriptors=false` is set 
-while using `createwallet` to create the wallet. Assuming you already have a wallet, we will start
-by creating an address, I'm running v23.0.0 but any version above v17.0 should be okay.
+a few Bitcoin Core commands with support for output descriptors. From Bitcoin Core v23.0.0, if you create a wallet with the CLI you will get a descriptor wallet unless `descriptors=false` is set while using `createwallet` to create the wallet. Assuming you already have a wallet, we will start by creating an address, I'm running v23.0.0 but any version above v17.0 should be okay.
 
 Run the following command to create an address:
 `bitcoin-cli -rpcwallet=<wallet-name> getnewaddress`
@@ -108,7 +104,7 @@ Using the descriptor in the JSON output above, I get the following result.
 }
 ```
 
-A script is solvable according to Core, if given the private key and the descriptor, the wallet software can generate a scriptsig/witness to spend its funds. `isrange` denotes if it is a range descriptor meaning it is possible to generate other descriptors from it. Range descriptors usually end their derivation path with `/*`. For example, `wpkh(tprv8ZgxMBicQKsPdy6LMhUtFHAgpocR8GC6QmwMSFpZs7h6Eziw3SpThFfczTDh5rW2krkqffa11UpX3XkeTTB2FvzZKWXqPY54Y6Rq4AQ5R8L/84'/0'/0'/0/*)` is a range descriptor.
+A script is solvable according to Core, if given the private key and the descriptor, the wallet software can generate a scriptsig/witness to spend its funds. `isrange` denotes if it is a range descriptor meaning it is possible to generate other descriptors from it. Range descriptors usually end their derivation path with `/*`. For example, `wpkh(tprv8ZgxMBicQKsPdy6LMhUtFHAgpocR8GC6QmwMSFpZs7h6Eziw3SpThFfczTDh5rW2krkqffa11UpX3XkeTTB2FvzZKWXqPY54Y6Rq4AQ5R8L/84'/0'/0'/0/*)` is a range descriptor. `hasprivatekeys` shows whether the descriptor itself contains a private key. Here the descriptor has only a pubkey, even though the underlying wallet does have the associated private key.
 
 The `getdescriptorinfo` command can also be used to derive the checksum of a descriptor if there you get one without a checksum. If we run the previous command, this time without adding the checksum at the end, Core will compute the checksum for us in the outputs.
 
@@ -143,8 +139,7 @@ Finally, it is possible to import descriptors into another wallet using the `imp
 
 `bitcoin-cli -rpcwallet=vladitest importdescriptors '[{ "desc": "wpkh([0ee8ad5c/84'"'"'/1'"'"'/0'"'"'/0/0]0384fa1d3495ae000e6da98daef1b68dfb0730bd1275f2ede4342b013ed8cd15a2)#y8j0e2j6", "timestamp":"now", "label": "" }]'`
 
-Notice the `'"'"'` used to denote the hardened paths in the descriptor, consider this as an escape character. It is also worth mentioning that if you are importing a descriptor with public keys, you 
-will need to create a wallet with private keys disabled by passing `disable_private_keys=true` as an argument.
+Notice the `'"'"'` used to denote the hardened paths in the descriptor, consider this as an escape character. It is also worth mentioning that if you are importing a descriptor with public keys, you will need to create a wallet with private keys disabled by passing `disable_private_keys=true` as an argument. Bitcoin Core does not handle wallets which include some watch-only addresses and some private key-backed addresses. This is done so that the wallet doesn't generate a new address from the watch-only descriptor when you meant to generate a private key backed address, and then you find out funds received there are lost or unspendable.
 
 ## Conclusion
 
