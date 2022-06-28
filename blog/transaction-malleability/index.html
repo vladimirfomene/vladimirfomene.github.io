@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta property='og:title' content='Transaction Malleability'/>
+  <meta property='og:image' content='https:&#x2F;&#x2F;res.cloudinary.com&#x2F;vladimirfomene&#x2F;image&#x2F;upload&#x2F;c_scale,w_1039&#x2F;v1653223416&#x2F;blog&#x2F;malleability.jpg'/>
+  <meta property='og:description' content='These addresses are like single-use (they could be used multiple times but it is not advised for privacy reasons) invoices that are issued by a receiver to a sender in a transaction'/>
+  <meta property='og:url' content='https:&#x2F;&#x2F;www.vladimirfomene.com&#x2F;blog&#x2F;transaction-malleability&#x2F;'/>
+  <title>Bitcoin | Lightning Bytes</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+  <header>
+    <nav>
+      <div>
+        <span id="name"><a href="/">Vladimir Fomene</a></span>
+        <span id="github" class="social-icon"><a href="https://github.com/vladimirfomene"><i class="fa fa-github-square"
+              style="font-size:48px;"></i></a></span>
+        <span id="twitter" class="social-icon"><a href="https://twitter.com/Vlad_kwasi"><i class="fa fa-twitter"
+              style="font-size:48px;"></i></a></span>
+        <span id="linkedin" class="social-icon"><a href="https://www.linkedin.com/in/vladimirfomene/"><i
+              class="fa fa-linkedin" style="font-size:48px;"></i></a></span>
+      </div>
+    </nav>
+  </header>
+  <aside>
+    <ul>
+      <li><a href="https://vladimirfomene.com/blog/">Blog</a></li>
+      <li><a href="https://vladimirfomene.com/project/">Projects</a></li>
+      <li><a href="https://vladimirfomene.com/talk/">Talks</a></li>
+    </ul>
+  </aside>
+  <section class="section">
+    <div class="container">
+      
+<div id="section">
+  <h1 class="title">
+    Transaction Malleability
+  </h1>
+  <p class="subtitle"><strong>2022-04-25</strong></p>
+  <h3 id="introduction">Introduction</h3>
+<p>Welcome back to the blog! This week we are going to be looking into Bitcoin transaction malleability. The goal will be to understand the transaction malleability and how it can be used 
+by an attacker to defraud a Bitcoin user of their funds. </p>
+<h3 id="bitcoin-transaction-data-structure">Bitcoin Transaction Data Structure</h3>
+<p>Before we can understand transaction malleability, we need to have a good grasp of the Bitcoin
+transaction data structure. Bitcoin transactions can either be represented in a serialized format (hexadecimal) or a deserialized format. To understand the serialized format of Bitcoin transactions, let's look at the following serialized transaction. TxId: <a href="https://learnmeabitcoin.com/explorer/transaction/c1b4e695098210a31fe02abffe9005cffc051bbe86ff33e173155bcbdc5821e3">c1b4e695098210a31fe02abffe9005cffc051bbe86ff33e173155bcbdc5821e3</a></p>
+<pre data-lang="hex" style="background-color:#2b303b;color:#c0c5ce;" class="language-hex "><code class="language-hex" data-lang="hex"><span>01000000017967a5185e907a25225574544c31f7b059c1a191d65b53dcc1554d339c4f9efc010000006a47304402206a2eb16b7b92051d0fa38c133e67684ed064effada1d7f925c842da401d4f22702201f196b10e6e4b4a9fff948e5c5d71ec5da53e90529c8dbd122bff2b1d21dc8a90121039b7bcd0824b9a9164f7ba098408e63e5b7e3cf90835cceb19868f54f8961a825ffffffff014baf2100000000001976a914db4d1141d0048b1ed15839d0b7a4c488cd368b0e88ac00000000
+</span></code></pre>
+<p>To understand this format, we are going to divide it into fields made up of one or many hexadecimal characters. The table below shows the name, size, data and description of each field in the transaction above.</p>
+<p><img src="/images/transaction-datastructure.png" alt="Transaction Data Structure" /></p>
+<p><a href="https://learnmeabitcoin.com/technical/transaction-data">Image Source</a></p>
+<blockquote>
+<p>The purple icon at the end of a field's data means the field is represented in little-endian. 
+As you might have suspected from the <code>input count</code> and <code>output count</code> fields, you can have 
+more than one input or output in a transaction.</p>
+</blockquote>
+<p>On the other hand, the same transaction can be represented in a deserialized format like JSON. Here is the JSON representation of the transaction we just saw above.</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>{
+</span><span>    &quot;</span><span style="color:#a3be8c;">txid</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">c1b4e695098210a31fe02abffe9005cffc051bbe86ff33e173155bcbdc5821e3</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">hash</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">c1b4e695098210a31fe02abffe9005cffc051bbe86ff33e173155bcbdc5821e3</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">version</span><span>&quot;: </span><span style="color:#d08770;">1</span><span>,
+</span><span>    &quot;</span><span style="color:#a3be8c;">size</span><span>&quot;: </span><span style="color:#d08770;">191</span><span>,
+</span><span>    &quot;</span><span style="color:#a3be8c;">vsize</span><span>&quot;: </span><span style="color:#d08770;">191</span><span>,
+</span><span>    &quot;</span><span style="color:#a3be8c;">weight</span><span>&quot;: </span><span style="color:#d08770;">764</span><span>,
+</span><span>    &quot;</span><span style="color:#a3be8c;">locktime</span><span>&quot;: </span><span style="color:#d08770;">0</span><span>,
+</span><span>    &quot;</span><span style="color:#a3be8c;">vin</span><span>&quot;: [
+</span><span>        {
+</span><span>            &quot;</span><span style="color:#a3be8c;">txid</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">fc9e4f9c334d55c1dc535bd691a1c159b0f7314c54745522257a905e18a56779</span><span>&quot;,
+</span><span>            &quot;</span><span style="color:#a3be8c;">vout</span><span>&quot;: </span><span style="color:#d08770;">1</span><span>,
+</span><span>            &quot;</span><span style="color:#a3be8c;">scriptSig</span><span>&quot;: {
+</span><span>                &quot;</span><span style="color:#a3be8c;">asm</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">304402206a2eb16b7b92051d0fa38c133e67684ed064effada1d7f925c842da401d4f22702201f196b10e6e4b4a9fff948e5c5d71ec5da53e90529c8dbd122bff2b1d21dc8a9[ALL] 039b7bcd0824b9a9164f7ba098408e63e5b7e3cf90835cceb19868f54f8961a825</span><span>&quot;,
+</span><span>                &quot;</span><span style="color:#a3be8c;">hex</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">47304402206a2eb16b7b92051d0fa38c133e67684ed064effada1d7f925c842da401d4f22702201f196b10e6e4b4a9fff948e5c5d71ec5da53e90529c8dbd122bff2b1d21dc8a90121039b7bcd0824b9a9164f7ba098408e63e5b7e3cf90835cceb19868f54f8961a825</span><span>&quot;
+</span><span>            },
+</span><span>            &quot;</span><span style="color:#a3be8c;">sequence</span><span>&quot;: </span><span style="color:#d08770;">4294967295
+</span><span>        }
+</span><span>    ],
+</span><span>    &quot;</span><span style="color:#a3be8c;">vout</span><span>&quot;: [
+</span><span>        {
+</span><span>            &quot;</span><span style="color:#a3be8c;">value</span><span>&quot;: </span><span style="color:#d08770;">0.02207563</span><span>,
+</span><span>            &quot;</span><span style="color:#a3be8c;">n</span><span>&quot;: </span><span style="color:#d08770;">0</span><span>,
+</span><span>            &quot;</span><span style="color:#a3be8c;">scriptPubKey</span><span>&quot;: {
+</span><span>                &quot;</span><span style="color:#a3be8c;">asm</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">OP_DUP OP_HASH160 db4d1141d0048b1ed15839d0b7a4c488cd368b0e OP_EQUALVERIFY OP_CHECKSIG</span><span>&quot;,
+</span><span>                &quot;</span><span style="color:#a3be8c;">hex</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">76a914db4d1141d0048b1ed15839d0b7a4c488cd368b0e88ac</span><span>&quot;,
+</span><span>                &quot;</span><span style="color:#a3be8c;">address</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">1LzZJkQfz9ahY2SfetBHLcwyWmQRE9CwfU</span><span>&quot;,
+</span><span>                &quot;</span><span style="color:#a3be8c;">type</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">pubkeyhash</span><span>&quot;
+</span><span>            }
+</span><span>        }
+</span><span>    ]
+</span><span>}
+</span></code></pre>
+<p>Though the two representations represent the same transaction, you might have noticed that you don't find inputs and outputs in this representation (at least they are not named like that). This is because they are represented by the <code>vin</code> and <code>vout</code> fields. This particular representation also has the hash of the transaction represented by the <code>txid</code> and <code>hash</code> fields. Now that we understand the transaction data structure, let's look at transaction malleability.</p>
+<h3 id="what-is-transaction-malleability">What is Transaction Malleability</h3>
+<p>Transaction malleability is the ability to modify certain parts of a Bitcoin transaction that has been broadcasted to the network. When this happens, the transaction ID (TxId) of the transaction changes because the transaction ID is simply the hash of the transaction. Does signing a Bitcoin transaction not make it tamper-proof? Signatures in Bitcoin only protect the integrity of the inputs, outputs and other data used in a transaction but not the signature. This is because trying to sign the signature will create a circular dependency. Circular dependency because you need to sign the signature during the signing process but this signature is generated as a product of the signing process.  With this in mind, there are ways of modifying the ScriptSig field of the transaction thereby changing the TxId without invalidating the transaction. In the next section, we are going to be exploring different mechanisms to do that. </p>
+<h3 id="how-can-a-bitcoin-transaction-be-malleated">How can a Bitcoin Transaction be malleated?</h3>
+<p>The potential sources of Bitcoin transaction malleability described in <a href="https://github.com/bitcoin/bips/blob/master/bip-0062.mediawiki">BIP 62 </a> can be grouped into three categories. </p>
+<h5 id="from-signature-format">From Signature Format</h5>
+<p>Bitcoin Core uses OpenSSL to validate signatures and OpenSSL accepts more serializations than just those encoded using the DER standard (this is the encoding used by Bitcoin signatures). This could be a source of malleability as the serialization encoding of the signature could be changed thereby changing the hash of the transaction.</p>
+<h5 id="from-ecdsa">From ECDSA</h5>
+<p>Elliptic curve signatures are made up of two numbers, (r, s) where r is the random part of the signature and s is the part generated from the private key. Once you have these two numbers, it is possible to generate a complimentary signature denoted (r, -s mod n) where n is the order of the elliptic curve without knowing the corresponding private key of the signature. This complimentary signature is still a valid signature for the transaction. </p>
+<p>In addition to complementary signatures, someone with access to the private key can generate many valid signatures as the elliptic curve digital signatures algorithm uses a random number to create signatures.</p>
+<h5 id="from-scriptsig">From ScriptSig</h5>
+<p>There is the possibility of adding operations to the ScriptSig field that do not change the outcome of executing the script. For example, we can have a ScriptSig that looks like the following.</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>&lt;signature&gt; &lt;pubkey&gt; OP_DUB OP_DROP
+</span></code></pre>
+<p>Adding OP_DUB, duplicates the topmost item on the stack and OP_DROP then removes it. The addition of these two operators will change the hash of the transaction, therefore, malleating it.</p>
+<p>Last but not least it is possible to zero pad numbers of bytes specified by push data operations(OP_0, OP_PUSHDATA1, OP_PUSHDATA2, OP_PUSHDATA4). This doesn't change the number of bytes that will be pushed to the stack. For example, reading <code>32</code> bytes is the same as reading <code>0032</code> bytes to the stack.</p>
+<h3 id="why-is-transaction-malleability-an-issue">Why is Transaction Malleability an issue?</h3>
+<p>Transaction Malleability is an issue because a malicious user could take advantage of it to defraud another Bitcoin user. Let's say a Bitcoin user is trying to pay a malicious merchant in bitcoins. The user can broadcast the transaction to the network. The merchant will then monitor the network for this transaction and once he/she gets it, they will then malleate it and rebroadcast it to the network. Now the race is on for which transaction will get mined first. If the malleated transaction gets mined first, it invalidates the user's transaction. Since the user's wallet will not see the transaction on the chain, after a while it might decide to redo the transaction thereby double paying the malicious merchant. One important thing to note here is that if the user's wallet double pays the merchant, it is because it is not tracking transactions correctly. It might only be looking at the transaction Id and not the UTXOs assigned to that user.</p>
+<p>An attacker cannot change inputs and outputs of a transaction using malleability as those parts are signed. </p>
+<p>If not fixed, transaction malleability will have also been an issue for the Lightning network as nodes on Lightning track the confirmations on a 2-of-2 multisig transaction (funding transaction) using the transaction Id to declare a channel open.</p>
+<p>This attack was claimed to have been used against many Bitcoin exchanges back in 2014. Most notably Mt.Gox, which was the largest Bitcoin exchange at the time claimed to have been rendered insolvent because of this attack. Though the attack was real in 2014, this <a href="https://arxiv.org/abs/1403.6676">paper</a> proves that there was no widespread use of this attack before the closing of Mt.Gox in February 2014. </p>
+<h3 id="conclusion">Conclusion</h3>
+<p>Most vulnerabilities were removed from the Bitcoin system with BIP 62 and SEGWIT eventually made this impossible. This might be the subject of a future post. In this post, we reviewed the transaction data structure and saw how parts of it can be modified to malleate the transaction hash (TxId). Last but not the least, we saw how an attacker can use this to get double paid and how this could have been an issue for the Lightning network implementation. </p>
+<h3 id="resources">Resources</h3>
+<p><a href="https://arxiv.org/abs/1403.6676">Bitcoin Transaction Malleability and MtGox</a>
+<a href="https://learnmeabitcoin.com/technical/transaction-data">Transaction Data</a>
+<a href="https://learnmeabitcoin.com/technical/ecdsa#signing-a-transaction">Transaction Signing</a>
+<a href="https://github.com/bitcoin/bips/blob/master/bip-0062.mediawiki">BIP 62</a>
+<a href="https://eklitzke.org/bitcoin-transaction-malleability">Bitcoin Transaction Malleability</a>
+Kalle Rosenbaum - Grokking Bitcoin, Pg 334-336</p>
+
+</div>
+
+    </div>
+  </section>
+</body>
+
+</html>

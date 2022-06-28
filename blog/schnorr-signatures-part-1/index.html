@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta property='og:title' content='The ABCs of Schnorr Signatures: Part 1'/>
+  <meta property='og:image' content='https:&#x2F;&#x2F;res.cloudinary.com&#x2F;vladimirfomene&#x2F;image&#x2F;upload&#x2F;c_scale,w_1200&#x2F;v1653570051&#x2F;blog&#x2F;open-source.jpg'/>
+  <meta property='og:description' content='Welcome back to the blog! This week, we are going to be learning about Schnorr Signatures, we will start by explaining its building blocks such as hash functions, commitment scheme and challenge&#x2F;response scheme. Then, we will build the Schnorr identity protocol and derive the signature scheme from it.'/>
+  <meta property='og:url' content='https:&#x2F;&#x2F;www.vladimirfomene.com&#x2F;blog&#x2F;contributing-to-bitcoin-open-source&#x2F;'/>
+  <title>Bitcoin | Lightning Bytes</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+  <header>
+    <nav>
+      <div>
+        <span id="name"><a href="/">Vladimir Fomene</a></span>
+        <span id="github" class="social-icon"><a href="https://github.com/vladimirfomene"><i class="fa fa-github-square"
+              style="font-size:48px;"></i></a></span>
+        <span id="twitter" class="social-icon"><a href="https://twitter.com/Vlad_kwasi"><i class="fa fa-twitter"
+              style="font-size:48px;"></i></a></span>
+        <span id="linkedin" class="social-icon"><a href="https://www.linkedin.com/in/vladimirfomene/"><i
+              class="fa fa-linkedin" style="font-size:48px;"></i></a></span>
+      </div>
+    </nav>
+  </header>
+  <aside>
+    <ul>
+      <li><a href="https://vladimirfomene.com/blog/">Blog</a></li>
+      <li><a href="https://vladimirfomene.com/project/">Projects</a></li>
+      <li><a href="https://vladimirfomene.com/talk/">Talks</a></li>
+    </ul>
+  </aside>
+  <section class="section">
+    <div class="container">
+      
+<div id="section">
+  <h1 class="title">
+    The ABCs of Schnorr Signatures: Part 1
+  </h1>
+  <p class="subtitle"><strong>2022-05-26</strong></p>
+  <h2 id="introduction">Introduction</h2>
+<p>Welcome back to the blog! This week, we are going to be learning about Schnorr Signatures. We will start by explaining its building blocks such as hash functions, commitment scheme and challenge/response scheme. Then, we will build the Schnorr identity protocol and derive the signature scheme from it.</p>
+<h2 id="motivation">Motivation</h2>
+<p>Most online platforms use passwords for authentication, despite their security weaknesses. The most important of which is allowing an online platform to learn about your secret aka password. How do we prove our identity online without necessary revealing our password? To solve this problem, cryptographers created a branch of cryptography in the 1970s called the public key cryptography. In public key cryptography, you have a key pair, one private and one public. You can share the public key with anyone but your private key should be kept secret almost like your password. This new branch of cryptography also gave rise to digital signature algorithms (<strong>DSA</strong>). A DSA is proof of knowledge of a private key for a corresponding public key. In an online interaction, one user will produce a DSA to show the other party they know the private key associated with their public key. There are different signature schemes, for example, <a href="https://cryptobook.nakov.com/digital-signatures/rsa-signatures">RSA</a>, <a href="https://learnmeabitcoin.com/technical/ecdsa">ECDSA</a> and Schnorr signatures. Now that you know the motivations behind DSAs, let's start discussing the building blocks for building the Schnorr signature scheme.</p>
+<h2 id="building-blocks-for-schnorr-signatures">Building Blocks for Schnorr Signatures</h2>
+<h3 id="commitment-schemes">Commitment Schemes</h3>
+<p>While building DSAs, we need a mechanism for a party in interaction to commit to a value without revealing it to the other party in the interaction. This requirement is also referred to as the  <strong>hiding</strong> property of the interaction. The second property we want from this interaction is for it to be <strong>binding</strong>. That is, if a party commit to a particular value and later changes it, the other party in the interaction should be able to prove that the value changed.  Cryptographic protocols usually use hash functions for commitments schemes because, given the hash of a message, you can't tell what the message was. This is because hash functions are one-way functions. That is, given x, you can compute <code>h(x)</code> but it is impractical to compute x given <code>h(x)</code>. This gives hash functions a <code>hiding</code> property. Given a hash, if the message was to change, the hash will also change. Therefore the hash function is <code>binding</code>.  It is also possible to commit to a value by multiplying it with the generator point of an elliptic curve. In Bitcoin, we commit to the private key by multiplying it with the generator point like so:</p>
+<p>$$
+P = pG 
+$$
+where p is the private key and P is the public key.</p>
+<p>This has a hiding property because it is computationally impractical to derive the private key from the public key and it also has the binding property because changing the private key will change the value you get as the public key. </p>
+<h3 id="challenge-response-strategy">Challenge / Response Strategy</h3>
+<p>Consider an online interaction between Alice and Bob, where Alice is the prover (i.e Alice has to prove that she knows the private key associated to some public key) and Bob, is the verifier (Bob has to verify Alice's claim). Alice has to prove that she knows the private key, <code>x</code> associated with her public key, <code>P</code> without revealing the private key to Bob. To aid Alice, Bob will generate a random number, <code>c</code> and share it with Alice, and challenge Alice to produce a number <code>s</code> such that:</p>
+<p>$$
+s * G = c * P
+$$</p>
+<p>Alice will then generate <code>s</code> by multiplying Bob's random number, <code>c</code> with her private key, <code>x</code>.  So we have:</p>
+<p>$$
+s = x * c
+$$</p>
+<p>With this, if Bob multiplies the right-hand side of the equation with <code>G</code>, the elliptic curve's generation point, he will get <code>x * G * C</code> which is just <code>P * c</code>. Since multiplication is commutative, this is also equal to <code>c * P</code>. This solves it right? Alice has been able to prove to Bob that she knows the private key associated with <code>P</code> her public key. Well, not really, with this solution, Bob can easily calculate Alice's private key by computing <code>s / c</code> where the division symbol represents the modulus inverse. Therefore this solution is binding but it is not hiding.</p>
+<h3 id="blinding-approach">Blinding Approach</h3>
+<p>Given that the above approach does not succeed in hiding Alice's private key. She decides to blind her private key, <code>x</code> adding it to a large randomly generated number, <code>r</code>. With this in place, <code>s</code> can now be written as:</p>
+<p>$$
+s = x + r
+$$</p>
+<p>Alice commits to <code>r</code> by multiplying it with the generator point, <code>G</code> of the elliptic curve. This gives us:</p>
+<p>$$
+R = r * G
+$$</p>
+<p>The pair <code>(R, s)</code> becomes the proof Alice gives to Bob. To verify this proof, Bob will have to prove the equality of the following equation given <code>s</code>, <code>R</code> and <code>P</code>.</p>
+<p>$$
+s * G = P + R
+$$</p>
+<p>It turns out this second approach also has its loophole, an attacker can pick  <code>s</code> to be anything and  <code>R = G * s - P</code>. If you substitute <code>R</code> in the verification equation above, the <code>P</code>'s will cancel out and the equation will pass verification. </p>
+<h3 id="combined-approach">Combined Approach</h3>
+<p>To solve the shortcomings of each approach, we will combine both approaches. Here Alice chooses a random number, <code>r</code> and commits to it by multiplying it with the generator point of the elliptic curve, <code>R = G * r</code>. Alice then shares <code>R</code> with Bob who will generate a challenge, <code>c</code> and share it with Alice. Alice will then create the following <code>s</code>:</p>
+<p>$$
+s = x * c + r
+$$</p>
+<p>When Bob receives, <code>s</code> from Alice, he has to verify the equality of the right-hand side and the left-hand side of the following equation:</p>
+<p>$$
+s * G = P * c + R
+$$</p>
+<p>With this Alice has successfully proven to Bob that she knows the private key associated with <code>P</code> securely.</p>
+<p>The protocol explained above is the Schnorr Identity Protocol not not the Schnorr signature scheme. We have shown how Alice could generate proof of knowledge for a secret (private key) without revealing the secret to Bob. It might also be important to note that the above protocol was interactive (both parties have to be online for this to work).</p>
+<p>To make the process non-interactive, we will replace our challenge with the following hash:</p>
+<p>$$
+H(R||P||m)
+$$ </p>
+<p>This process is known as the <strong>Fiat-Shamir transform</strong>. Once we have applied the Fiat-Shamir transform, we now have the <strong>Schnorr signature scheme</strong>.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>In this article, we were able to build the Schnorr signature scheme starting from commitments and the challenge/response scheme to form the Schnorr identity protocol and finally used the Fiat-Shamir transform to derive the Schnorr signature scheme from the Schnorr identity protocol. While discussing we also proved that the protocol is sound, complete and provable.</p>
+<h2 id="references">References</h2>
+<p>While working on this article, I learned a lot from the following resources:</p>
+<ul>
+<li><a href="https://www.youtube.com/watch?v=XKatSGCZ-gE">Introduction to Schnorr Signatures with Elichai Turkel</a></li>
+<li><a href="https://www.youtube.com/watch?v=wjACBRJDfxc">How to design Schnorr Signatures with Adam Gibson</a></li>
+<li><a href="https://www.youtube.com/watch?v=r9hJiDrtukI">CryptoShorts Schnorr Signatures</a></li>
+<li><a href="https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki">Schnorr Signature BIP340</a></li>
+</ul>
+
+</div>
+
+    </div>
+  </section>
+</body>
+
+</html>

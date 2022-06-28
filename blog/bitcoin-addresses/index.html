@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta property='og:title' content='Bitcoin Addresses'/>
+  <meta property='og:image' content='https:&#x2F;&#x2F;res.cloudinary.com&#x2F;vladimirfomene&#x2F;image&#x2F;upload&#x2F;v1653069616&#x2F;blog&#x2F;addresses.png'/>
+  <meta property='og:description' content='These addresses are like single-use (they could be used multiple times but it is not advised for privacy reasons) invoices that are issued by a receiver to a sender in a transaction'/>
+  <meta property='og:url' content='https:&#x2F;&#x2F;www.vladimirfomene.com&#x2F;blog&#x2F;bitcoin-addresses&#x2F;'/>
+  <title>Bitcoin | Lightning Bytes</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+  <header>
+    <nav>
+      <div>
+        <span id="name"><a href="/">Vladimir Fomene</a></span>
+        <span id="github" class="social-icon"><a href="https://github.com/vladimirfomene"><i class="fa fa-github-square"
+              style="font-size:48px;"></i></a></span>
+        <span id="twitter" class="social-icon"><a href="https://twitter.com/Vlad_kwasi"><i class="fa fa-twitter"
+              style="font-size:48px;"></i></a></span>
+        <span id="linkedin" class="social-icon"><a href="https://www.linkedin.com/in/vladimirfomene/"><i
+              class="fa fa-linkedin" style="font-size:48px;"></i></a></span>
+      </div>
+    </nav>
+  </header>
+  <aside>
+    <ul>
+      <li><a href="https://vladimirfomene.com/blog/">Blog</a></li>
+      <li><a href="https://vladimirfomene.com/project/">Projects</a></li>
+      <li><a href="https://vladimirfomene.com/talk/">Talks</a></li>
+    </ul>
+  </aside>
+  <section class="section">
+    <div class="container">
+      
+<div id="section">
+  <h1 class="title">
+    Bitcoin Addresses
+  </h1>
+  <p class="subtitle"><strong>2022-04-18</strong></p>
+  <p>Welcome back to the blog! Today we will explore how Bitcoin Addresses are formed and how they are represented. You can find the repository for the code at the bottom of the article.</p>
+<h3 id="introduction">Introduction</h3>
+<p>What are Bitcoin addresses anyway? Bitcoin is a decentralized network of computers which secures the funds of all the users of the network. Where do these funds live you might wonder? They live at your Bitcoin address. These addresses are like single-use (they could be used multiple times but it is not advised for privacy reasons) invoices that are issued by a receiver to a sender in a transaction. The best way to think about a Bitcoin address is to see it as a place on the network where your funds can live. As a user of the Bitcoin network, you can have more than one Bitcoin address.</p>
+<h3 id="address-utility">Address Utility</h3>
+<p>In this article, we are going to be focusing on a particular group of Bitcoin Addresses called Pay-to-Public-Key-Hash addresses(P2PKH). In a Bitcoin transaction where you are receiving funds, you have to give your Bitcoin address to the sender and the sender's wallet software will generate and sign a transaction that assigns some bitcoins to your address. This transaction will then be broadcasted to the Bitcoin network. Now that we have a good understanding of the utility of addresses, let's see how we can generate one.</p>
+<h3 id="generating-private-key">Generating Private Key</h3>
+<p>Before generating an address, we will first have to generate its public key. Additionally, before generating a public key, we will first have to generate a private key. So how do we generate a private key? First, we start by generating a cryptographically secure random number, in most systems, this means generating a key using your operating system as your source of randomness. To do that, we will generate 256 bytes (I choose this arbitrarily, just make sure the randomness is bigger than 256 bits) of randomness from the OS' cryptographically secure random number generator. After generating this entropy, we will generate a SHA256 digest from it. SHA256 because it produces keys which are 256 bits and the Bitcoin System requires our private key to be 256 bits. We have to make sure that this private key is less than the order of Bitcoin's elliptic curve, denoted in the code as <code>n</code>. This process will look like this in Python.</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#b48ead;">import </span><span>os
+</span><span style="color:#b48ead;">import </span><span>hashlib
+</span><span>
+</span><span>
+</span><span style="color:#65737e;"># Constants
+</span><span>
+</span><span>n = </span><span style="color:#d08770;">115792089237316195423570985008687907852837564279074904382605163141518161494337
+</span><span>
+</span><span>  
+</span><span style="color:#65737e;"># 1. Generate randomness and hash it with sha256 algorithm.
+</span><span>
+</span><span>private_key = </span><span style="color:#d08770;">None
+</span><span>
+</span><span style="color:#b48ead;">while </span><span style="color:#d08770;">True</span><span>:
+</span><span>
+</span><span>	entropy = os.</span><span style="color:#bf616a;">urandom</span><span>(</span><span style="color:#d08770;">256</span><span>)
+</span><span>
+</span><span>	private_key = hashlib.</span><span style="color:#bf616a;">sha256</span><span>(entropy).</span><span style="color:#bf616a;">hexdigest</span><span>()
+</span><span>
+</span><span>	</span><span style="color:#b48ead;">if </span><span style="color:#bf616a;">int</span><span>(private_key, </span><span style="color:#d08770;">16</span><span>) &lt; n:
+</span><span>		</span><span style="color:#b48ead;">break
+</span><span>
+</span><span style="color:#b48ead;">break
+</span></code></pre>
+<p>After this process, your <code>private_key</code> variable will now contain a cryptographically secure private key in hexadecimal. </p>
+<blockquote>
+<p>Please don't use this private key for real Bitcoin transactions. The code snippet above is strictly for educational purposes.</p>
+</blockquote>
+<h3 id="generating-public-key">Generating Public Key</h3>
+<p>Now that we have a private key, we need to generate our public key from this private key. To do that, we multiply our private key with the generator point of the <a href="https://www.secg.org/sec2-v2.pdf">secp256k1  elliptic curve</a>. Since our private key is just a big random number, we can mathematically multiply with a point on this curve.  For the elliptic curve, we pulled <a href="https://github.com/wobine/blackboard101/blob/master/EllipticCurvesPart4-PrivateKeyToPublicKey.py">James D'Angelo's implementation</a> and just ported it to Python 3. Once we do that, we can import it in our project.</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#d08770;">...
+</span><span style="color:#b48ead;">import </span><span>elliptic </span><span style="color:#65737e;"># Elliptic curve from James D&#39;Angelo
+</span><span>
+</span><span style="color:#65737e;"># Constants
+</span><span>
+</span><span style="color:#d08770;">...</span><span>..
+</span><span>
+</span><span>generator = (
+</span><span>
+</span><span style="color:#d08770;">55066263022277343669578718895168534326250603453777594175500187360389116729240</span><span>,
+</span><span>
+</span><span style="color:#d08770;">32670510020758816978083085130507043184471273380659243275938904335757337482424
+</span><span>
+</span><span>)
+</span><span>
+</span><span style="color:#65737e;"># 2. Calculate the Public key from the Private key with Elliptic Curve.
+</span><span>
+</span><span>public_key = elliptic.</span><span style="color:#bf616a;">EccMultiply</span><span>(generator,</span><span style="color:#bf616a;">int</span><span>(private_key, </span><span style="color:#d08770;">16</span><span>))
+</span><span>
+</span></code></pre>
+<p>With this in place, your public key should now be in the <code>public_key</code> variable. This is just a point with X and Y coordinates on the elliptic curve. The <code>generator</code> used in the variable was copied from the secp256k1 standard document above and converted from hexadecimal to decimal.</p>
+<h3 id="private-key-format">Private Key Format</h3>
+<p>Although our hexadecimal private key is valid, it is not the recommended format expected by wallet software when instantiating a wallet from the private key. The format expected by this software is called Wallet Import Format (WIF for short). This format is divided into four parts.
+<strong>version : payload : suffix : checksum</strong></p>
+<ul>
+<li>The version informs wallet software which type of key this is. For private keys, the version number is <strong>0x80</strong>.</li>
+<li>The payload is the hexadecimal form of the key as we generated it in the previous section.</li>
+<li>The suffix indicates whether this key is compressed or not compressed. <strong>0x01</strong> for compressed keys and it is left empty for uncompressed keys.</li>
+<li>The checksum helps the wallet software detect if the key has been transcribed correctly into the software.</li>
+</ul>
+<p>WIF requires these four parts to be Base58 encoded. Once concatenated and encoded using Base58 encoding, the uncompressed private keys start with the number 5 while the compressed private keys start with K or L. Here is what implementing from our hexadecimal private key looks like:</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#d08770;">.........</span><span>.
+</span><span style="color:#b48ead;">import </span><span>base58
+</span><span style="color:#b48ead;">from </span><span>binascii </span><span style="color:#b48ead;">import </span><span>unhexlify </span><span style="color:#b48ead;">as </span><span>decode_hex
+</span><span>
+</span><span style="color:#65737e;"># 3. Generate a compressed and uncompressed private key
+</span><span>
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">generate_base58_format</span><span>(</span><span style="color:#bf616a;">payload</span><span>, </span><span style="color:#bf616a;">prefix</span><span>, </span><span style="color:#bf616a;">suffix </span><span>= &quot;&quot;):
+</span><span>	hash256 = hashlib.</span><span style="color:#bf616a;">sha256</span><span>(</span><span style="color:#bf616a;">decode_hex</span><span>(prefix + payload)).</span><span style="color:#bf616a;">hexdigest</span><span>()
+</span><span>	checksum = hashlib.</span><span style="color:#bf616a;">sha256</span><span>(</span><span style="color:#bf616a;">decode_hex</span><span>(hash256)).</span><span style="color:#bf616a;">hexdigest</span><span>()
+</span><span>	checksum = checksum[:</span><span style="color:#d08770;">8</span><span>]
+</span><span>	formatted_key = prefix + payload + suffix + checksum
+</span><span>	</span><span style="color:#b48ead;">return </span><span>base58.</span><span style="color:#bf616a;">b58encode</span><span>(</span><span style="color:#bf616a;">decode_hex</span><span>(formatted_key))
+</span><span>
+</span><span>
+</span><span>wif_key_compressed = </span><span style="color:#bf616a;">generate_base58_format</span><span>(private_key, &quot;</span><span style="color:#a3be8c;">80</span><span>&quot;, &quot;</span><span style="color:#a3be8c;">01</span><span>&quot;)
+</span><span>wif_key_uncompressed = </span><span style="color:#bf616a;">generate_base58_format</span><span>(private_key, &quot;</span><span style="color:#a3be8c;">80</span><span>&quot;)
+</span><span>
+</span><span style="color:#96b5b4;">print</span><span>(&quot;</span><span style="color:#a3be8c;">WIF Private key Compressed:</span><span>&quot;, wif_key_compressed)
+</span><span style="color:#96b5b4;">print</span><span>(&quot;</span><span style="color:#a3be8c;">WIF Private key Uncompressed:</span><span>&quot;, wif_key_uncompressed)
+</span><span>
+</span></code></pre>
+<p>Notice the importation of two new libraries at the top of the script. You will have to download <code>base58</code> for the encoding. <code>binascii</code> is part of the system, you don't have to download it. Did you notice that the compressed version of the key is bigger than the uncompressed version? What is that all about? We use compressed here to mean that compressed public keys can be generated from the compressed private keys and uncompressed public keys can be generated from uncompressed private keys. This reduces the number of public keys a wallet creates when you import a WIF private key as it can use this suffix to determine whether to generate a compressed public key or uncompressed public key. In the original Bitcoin software, the wallet supported Pay-To-Pubkey (P2PK) and Pay-To-Pubkey hash (P2PKH) addresses. If the suffix was not added, it means the wallets will have to search funds using four types of public keys: uncompressed_P2PK, compressed_P2PK, uncompressed_P2PKH and compressed_P2PKH. With the WIF suffix, wallets will reduce the types of keys used for fund search by 3. With the default key pool size of 1000 in Bitcoin Core, this will reduce the key types searched by 3000. This is a huge performance boost for large wallets with hundreds of thousands of addresses because it reduces the amount of processing required for funds associated with the wallet's key when a new block is received. </p>
+<h3 id="base58-and-base58check-encoding">Base58 and Base58Check Encoding</h3>
+<p>The keys above are Base58Check encoded. What does that even mean? To represent long numbers compactly, many computer systems used alphanumeric representations. For example, <code>1000000</code> in decimal is <code>F4240</code> in hexadecimal, we went from seven characters to five characters. To represent Bitcoin addresses compactly, Bitcoin encodes them using Base 58 characters. Base58 encoding is just a subset of Base64 encoding with characters that might appear identical when displayed removed. Characters removed are 0 (zero), O (capital o), I (capital i), l (lower case L), + and /.</p>
+<p>Base58 means characters in Bitcoin addresses can be between 0 and 57. Here are the characters in the base58 alphabet: <code>123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz</code>. <strong>0</strong> is represented by <strong>1</strong> and <strong>57</strong> by <strong>z</strong> in Base58. For Base58Check, it means instead of just encoding the number for which we want a compact representation, we will append a checksum to it before encoding. In Bitcoin, the checksum is the first four bytes of the <code>SHA256(SHA256(prefix + payload))</code> where the prefix is the version and the payload is the private key. In the code above, we are using the first 8 characters because the hash is in hexadecimal and a byte is equivalent to two hexadecimal characters. Since the checksum is derived from the hash of the encoded data, it can be used to detect errors in Bitcoin addresses. For example, when a user mistypes an address in a wallet.</p>
+<h3 id="public-key-format">Public Key Format</h3>
+<p>Now that we started talking about public keys, you might be wondering how to format them. They have the same format as the private key except that their suffix is always empty. The payload is also different depending on whether it is a compressed or uncompressed key. </p>
+<h4 id="uncompressed-public-keys">Uncompressed Public Keys</h4>
+<ul>
+<li>Version number is <strong>0x04</strong></li>
+<li>Payload is a concatenation of the X and Y coordinate of the point.</li>
+<li>Suffix is empty</li>
+<li>Checksum is calculated as in the case of private keys.</li>
+</ul>
+<h4 id="compressed-public-keys">Compressed Public keys</h4>
+<p>To move from uncompressed keys to compressed keys, we discard the Y coordinate of our point. This is because we can always re-compute it from the elliptic curve. </p>
+<ul>
+<li>The version number of the compressed public key is <strong>0x02</strong> if the Y coordinate is even and <strong>0x03</strong> if the Y coordinate is odd. </li>
+<li>The payload is just the X coordinate</li>
+<li>Suffix is empty </li>
+<li>Checksum is calculated as in the case of private keys.</li>
+</ul>
+<h3 id="generating-bitcoin-address">Generating Bitcoin Address</h3>
+<p>With all this knowledge, let's now generate a compressed and uncompressed public key. Then, we can generate their Bitcoin addresses. The following code does exactly that:</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#65737e;"># we slice from index 2 because we don&#39;t want the string &quot;0x&quot; to be part of the key. Same 
+</span><span style="color:#65737e;"># reason everywhere else.
+</span><span>uncompressed_public_key = &quot;</span><span style="color:#a3be8c;">04</span><span>&quot; + </span><span style="color:#96b5b4;">hex</span><span>(public_key[</span><span style="color:#d08770;">0</span><span>])[</span><span style="color:#d08770;">2</span><span>:] + </span><span style="color:#96b5b4;">hex</span><span>(public_key[</span><span style="color:#d08770;">1</span><span>])[</span><span style="color:#d08770;">2</span><span>:]
+</span><span style="color:#65737e;"># we compute prefix which will be used for our public key
+</span><span>prefix_compressed_public_key = &quot;</span><span style="color:#a3be8c;">02</span><span>&quot; </span><span style="color:#b48ead;">if </span><span>public_key[</span><span style="color:#d08770;">1</span><span>] % </span><span style="color:#d08770;">2 </span><span>== </span><span style="color:#d08770;">0 </span><span style="color:#b48ead;">else </span><span>&quot;</span><span style="color:#a3be8c;">03</span><span>&quot;
+</span><span>
+</span><span>compressed_public_key = prefix_compressed_public_key + </span><span style="color:#96b5b4;">hex</span><span>(public_key[</span><span style="color:#d08770;">0</span><span>])[</span><span style="color:#d08770;">2</span><span>:]
+</span><span style="color:#96b5b4;">print</span><span>(&quot;</span><span style="color:#a3be8c;">Uncompressed Public key: </span><span>&quot;, uncompressed_public_key)
+</span><span style="color:#96b5b4;">print</span><span>(&quot;</span><span style="color:#a3be8c;">Compressed Public key: </span><span>&quot;, compressed_public_key)
+</span><span>
+</span><span style="color:#65737e;"># When generating Bitcoin addresses from public keys, we have to add a &quot;00&quot; prefix during the #encoding.
+</span><span style="color:#96b5b4;">print</span><span>(&quot;</span><span style="color:#a3be8c;">Uncompressed Bitcoin Address: </span><span>&quot;, </span><span style="color:#bf616a;">generate_base58_format</span><span>(uncompressed_public_key, &quot;</span><span style="color:#a3be8c;">00</span><span>&quot;))
+</span><span style="color:#96b5b4;">print</span><span>(&quot;</span><span style="color:#a3be8c;">Compressed Bitcoin Address: </span><span>&quot;, </span><span style="color:#bf616a;">generate_base58_format</span><span>(compressed_public_key, &quot;</span><span style="color:#a3be8c;">00</span><span>&quot;))
+</span><span>
+</span></code></pre>
+<h3 id="other-address-types">Other Address Types</h3>
+<p>There is another class of addresses that we haven't looked at called Pay-To-Script-Hash addresses. These addresses are generated by calculating the following hash:</p>
+<p><code>hash = RIPEMD160(SHA256(script))</code> </p>
+<p>Then encoding this hash with base58 checksum with a version prefix of 5. They usually start with &quot;3&quot; after encoding. Aside from this, SegWit also introduced two new address types, Pay-To-Witness-Script-Hash (P2WSH) and Pay-To-Witness-Public-Key-Hash (P2WPKH).</p>
+<h3 id="conclusion">Conclusion</h3>
+<p>In this post, we explored how to generate a private key from a cryptographically secure source of entropy, we used this private key to generate public keys and finally saw how we could format both private and public keys. The addresses shown in this post are considered legacy addresses as most Bitcoin wallets no longer use them. Nowadays, most wallets use SegWit addresses which are encoded using Bech32 instead of the Base58 encoding used above. These might be the subject of a future post. Stay tuned!</p>
+<h3 id="resources">Resources</h3>
+<ul>
+<li><a href="https://www.secg.org/sec2-v2.pdf">Elliptic Curve Standard documentation</a></li>
+<li><a href="https://github.com/bitcoinbook/bitcoinbook/blob/develop/ch04.asciidoc">Mastering Bitcoin, Andreas Antonopoulos</a></li>
+<li><a href="https://learnmeabitcoin.com/technical/public-key">Learn Me a Bitcoin</a></li>
+<li><a href="https://github.com/vladimirfomene/python-addresses">Python Bitcoin Addresses Repo</a></li>
+<li><a href="https://www.reddit.com/r/Bitcoin/comments/g46nvw/why_do_wifcompressed_private_keys_exist/">Why do WIF-compressed private keys exist?</a></li>
+</ul>
+
+</div>
+
+    </div>
+  </section>
+</body>
+
+</html>

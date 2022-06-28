@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta property='og:title' content='Wallet Descriptors'/>
+  <meta property='og:image' content='https:&#x2F;&#x2F;res.cloudinary.com&#x2F;vladimirfomene&#x2F;image&#x2F;upload&#x2F;c_scale,w_1039&#x2F;v1653223416&#x2F;blog&#x2F;malleability.jpg'/>
+  <meta property='og:description' content='Wallet descriptors or output script descriptor are plain-text language that helps wallet move from public&#x2F;private keys to scripts and addresses'/>
+  <meta property='og:url' content='https:&#x2F;&#x2F;www.vladimirfomene.com&#x2F;blog&#x2F;wallet-descriptors&#x2F;'/>
+  <title>Bitcoin | Lightning Bytes</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+  <header>
+    <nav>
+      <div>
+        <span id="name"><a href="/">Vladimir Fomene</a></span>
+        <span id="github" class="social-icon"><a href="https://github.com/vladimirfomene"><i class="fa fa-github-square"
+              style="font-size:48px;"></i></a></span>
+        <span id="twitter" class="social-icon"><a href="https://twitter.com/Vlad_kwasi"><i class="fa fa-twitter"
+              style="font-size:48px;"></i></a></span>
+        <span id="linkedin" class="social-icon"><a href="https://www.linkedin.com/in/vladimirfomene/"><i
+              class="fa fa-linkedin" style="font-size:48px;"></i></a></span>
+      </div>
+    </nav>
+  </header>
+  <aside>
+    <ul>
+      <li><a href="https://vladimirfomene.com/blog/">Blog</a></li>
+      <li><a href="https://vladimirfomene.com/project/">Projects</a></li>
+      <li><a href="https://vladimirfomene.com/talk/">Talks</a></li>
+    </ul>
+  </aside>
+  <section class="section">
+    <div class="container">
+      
+<div id="section">
+  <h1 class="title">
+    Wallet Descriptors
+  </h1>
+  <p class="subtitle"><strong>2022-06-01</strong></p>
+  <p>Welcome back to the blog! This week we are going to be looking at the issues that led to the creation of wallet descriptors, look at their syntax and talk about their implications for wallets.</p>
+<h2 id="introduction">Introduction</h2>
+<p>To the everyday Bitcoin user, wallets seem to be working fairly well and can easily be backed up thanks to BIP39 mnemonic phrases. Though the &quot;tree of keys&quot; wallet or the wallet generated from the mnemonic phrase often called the legacy wallet works well, it has a couple of shortcomings. Due to these shortcomings, <a href="https://github.com/bitcoin/bips/blob/master/bip-0380.mediawiki">BIP380</a> was proposed to resolve some of the issues faced by the current wallet architecture.</p>
+<h2 id="why-wallet-descriptors">Why  Wallet Descriptors</h2>
+<p>As mentioned in the introduction, with the old wallet we only have keys and it is not clear to the 
+wallet software which type of address types (P2PKH, P2WPKH, P2WSH, etc) to generate from these keys.
+As a consequence, wallet restoration is very computationally intensive, for each key, wallets have to scan the whole chain for different ScriptPubKey types to calculate a user's balance.</p>
+<p>Although, BIP44, BIP49 and BIP84 provide standard derivation paths to be used by all wallets, not every wallet supports these BIPs. As a direct consequence, some wallets will not be able to
+derive a user's balance given a BIP39 mnemonic phrase as they might be using a different derivation path from the wallet that produced the backup. This is will create an illusion of a loss of funds for a user thereby providing a very poor user experience.</p>
+<p>This current architecture also doesn't provide the mechanism for wallets to easily watch funds in a multisig and perhaps most importantly to be able to monitor and sign transactions related to arbitrary scripts, without specific logic being added to every single wallet implementation.</p>
+<p>Last but not the least, with the advent of SEGWIT, wallets created new version bytes (version bytes are prepended to the 20 bytes of a public key to create different address types) to denote native SegWit addresses. With SEGWIT, wallets used <code>0x049d7cb2</code> for <code>ypub</code> which is an extended public key for wrapped SEGWIT addresses and <code>0x04b24746</code> for <code>zpub</code> which is an extended public key for native SegWit. Using prefixes like <code>xpub</code>, <code>ypub</code> and <code>zpub</code> are not sustainable in the long term as they are only so many letters in the alphabet.</p>
+<p>With all these problems, we need a way to help wallet software easily generate the right addresses and scripts given a particular key, extended key and derivation path. This is where wallet descriptors come to the rescue.</p>
+<h2 id="what-are-descriptors">What are descriptors?</h2>
+<p>Wallet descriptors often called output descriptors or output script descriptors were proposed as a new specification (BIP380) in Bitcoin which provides a plain text language that describes how outputs scripts (ScriptPubKey) and addresses are derived from keys. Wallet descriptors also contain all the information needed to spend from a particular script if the wallet software has the private key. By information, I mean the script type (P2PKH, P2WPKH, etc) and public keys necessary to create a scriptsig/witness to spend an output. </p>
+<h2 id="structure-of-wallet-descriptors">Structure of wallet descriptors?</h2>
+<p>Now that we understand what descriptors are, let's look at the structure of descriptors. Here is a descriptor for an address generated in my local Bitcoin core running in regtest. 
+<code>wpkh([3bc81a2f/84'/1'/0'/0/0]02c6577ab6080b2ebce1eb86d8ce5c8061cb029a82ae4ef9d49e1ed37e3d0d3896)#tcgk59uj</code></p>
+<p>This string has the following format: </p>
+<p><code>function([derivation-path]key)#checksum</code></p>
+<ul>
+<li>The function, in this case, is <code>wpkh</code> which means you can derive a P2WPKH address or ScriptPubKey from this descriptor.</li>
+<li><code>[3bc81a2f/84'/1'/0'/0/0]</code> is the derivation path but which doesn't start with M or m but instead the first four bytes of the hash of the master key. </li>
+<li><code>02c6577ab6080b2ebce1eb86d8ce5c8061cb029a82ae4ef9d49e1ed37e3d0d3896</code> is the key in this case.</li>
+<li><code>tcgk59uj</code> is the checksum which makes it easy for transcription errors to be detected when descriptors are moved from one wallet to another.</li>
+</ul>
+<h2 id="drawbacks-of-wallet-descriptors">Drawbacks of Wallet descriptors</h2>
+<p>Though descriptors are great at what they do, they will potentially make the import/export user experience for wallets not very friendly. This is because descriptors are easily readable to someone who is technical but it looks like code to someone who is not technical. It seems much easier for an average user to remember a mnemonic than to write down an output descriptor. It is important to note that wallet descriptors can be used alongside mnemonics when it comes to backing up a wallet. For example, the mnemonic could be used to restore the HD wallet and the descriptor could be used to restore a wallet with complex scripts like multisig.  There have been talks to convert these descriptors to base64 for backup/restore or even to create a new mnemonic system that works for them.</p>
+<h2 id="wallet-descriptors-in-bitcoin-core">Wallet descriptors in Bitcoin Core</h2>
+<p>Core has had support for output descriptors since v17.0. In this section we are going to explore 
+a few Bitcoin Core commands with support for output descriptors. From Bitcoin Core v23.0.0, if you create a wallet with the CLI you will get a descriptor wallet unless <code>descriptors=false</code> is set while using <code>createwallet</code> to create the wallet. Assuming you already have a wallet, we will start by creating an address, I'm running v23.0.0 but any version above v17.0 should be okay.</p>
+<p>Run the following command to create an address:
+<code>bitcoin-cli -rpcwallet=&lt;wallet-name&gt; getnewaddress</code></p>
+<p>This should get you a bech32 bitcoin address. Using <code>getaddressinfo</code> let's see what Core offers us 
+apart from the address.</p>
+<p><code>bitcoin-cli -rpcwallet=&lt;wallet-name&gt; getaddressinfo &lt;previous-generated-address&gt;</code></p>
+<p>After running this command you should have a JSON object as result with a <code>desc</code> which contains your output descriptor. It should look similar to this:</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>{
+</span><span>    &quot;</span><span style="color:#a3be8c;">address</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">bcrt1q2e4g8cetupxes7l95qstpxq8qnpml9ev6gjle2</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">scriptPubKey</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">0014566a83e32be04d987be5a020b0980704c3bf972c</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">ismine</span><span>&quot;: </span><span style="color:#d08770;">true</span><span>,
+</span><span>    &quot;</span><span style="color:#a3be8c;">solvable</span><span>&quot;: </span><span style="color:#d08770;">true</span><span>,
+</span><span>    &quot;</span><span style="color:#a3be8c;">desc</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">wpkh([dc711bf8/0&#39;/0&#39;/1&#39;]0303207b2fd5b151397949aa9d6f9ff8eccd3bb97aa05192ced942b17bbd45e9d9)#yr975l8h</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">iswatchonly</span><span>&quot;: </span><span style="color:#d08770;">false</span><span>,
+</span><span>    &quot;</span><span style="color:#a3be8c;">isscript</span><span>&quot;: </span><span style="color:#d08770;">false</span><span>,
+</span><span>    &quot;</span><span style="color:#a3be8c;">iswitness</span><span>&quot;: </span><span style="color:#d08770;">true</span><span>,
+</span><span>    &quot;</span><span style="color:#a3be8c;">witness_version</span><span>&quot;: </span><span style="color:#d08770;">0</span><span>,
+</span><span>    &quot;</span><span style="color:#a3be8c;">witness_program</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">566a83e32be04d987be5a020b0980704c3bf972c</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">pubkey</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">0303207b2fd5b151397949aa9d6f9ff8eccd3bb97aa05192ced942b17bbd45e9d9</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">ischange</span><span>&quot;: </span><span style="color:#d08770;">false</span><span>,
+</span><span>    &quot;</span><span style="color:#a3be8c;">timestamp</span><span>&quot;: </span><span style="color:#d08770;">1654093495</span><span>,
+</span><span>    &quot;</span><span style="color:#a3be8c;">hdkeypath</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">m/0&#39;/0&#39;/1&#39;</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">hdseedid</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">50b54a741dbc3b120280391ecba28d657e137bce</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">hdmasterfingerprint</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">dc711bf8</span><span>&quot;,
+</span><span>    &quot;</span><span style="color:#a3be8c;">labels</span><span>&quot;: [&quot;&quot;]
+</span><span>}
+</span></code></pre>
+<p>We can get more information about the descriptor in the result above by running the following command:</p>
+<p><code>bitcoin-cli getdescriptorinfo &lt;descriptor&gt;</code></p>
+<p>Using the descriptor in the JSON output above, I get the following result.</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>{
+</span><span>  &quot;</span><span style="color:#a3be8c;">descriptor</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">wpkh([dc711bf8/0&#39;/0&#39;/1&#39;]0303207b2fd5b151397949aa9d6f9ff8eccd3bb97aa05192ced942b17bbd45e9d9)#yr975l8h</span><span>&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">checksum</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">yr975l8h</span><span>&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">isrange</span><span>&quot;: </span><span style="color:#d08770;">false</span><span>,
+</span><span>  &quot;</span><span style="color:#a3be8c;">issolvable</span><span>&quot;: </span><span style="color:#d08770;">true</span><span>,
+</span><span>  &quot;</span><span style="color:#a3be8c;">hasprivatekeys</span><span>&quot;: </span><span style="color:#d08770;">false
+</span><span>}
+</span></code></pre>
+<p>A script is solvable according to Core, if given the private key and the descriptor, the wallet software can generate a scriptsig/witness to spend its funds. <code>isrange</code> denotes if it is a range descriptor meaning it is possible to generate other descriptors from it. Range descriptors usually end their derivation path with <code>/*</code>. For example, <code>wpkh(tprv8ZgxMBicQKsPdy6LMhUtFHAgpocR8GC6QmwMSFpZs7h6Eziw3SpThFfczTDh5rW2krkqffa11UpX3XkeTTB2FvzZKWXqPY54Y6Rq4AQ5R8L/84'/0'/0'/0/*)</code> is a range descriptor. <code>hasprivatekeys</code> shows whether the descriptor itself contains a private key. Here the descriptor has only a pubkey, even though the underlying wallet does have the associated private key.</p>
+<p>The <code>getdescriptorinfo</code> command can also be used to derive the checksum of a descriptor if there you get one without a checksum. If we run the previous command, this time without adding the checksum at the end, Core will compute the checksum for us in the outputs.</p>
+<p><code>bitcoin-cli getdescriptorinfo &quot;wpkh([dc711bf8/0'/0'/1']0303207b2fd5b151397949aa9d6f9ff8eccd3bb97aa05192ced942b17bbd45e9d9)&quot;</code></p>
+<p>The output derives the checksum for us. See the JSON result below:</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>{
+</span><span>  &quot;</span><span style="color:#a3be8c;">descriptor</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">wpkh([dc711bf8/0&#39;/0&#39;/1&#39;]0303207b2fd5b151397949aa9d6f9ff8eccd3bb97aa05192ced942b17bbd45e9d9)#yr975l8h</span><span>&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">checksum</span><span>&quot;: &quot;</span><span style="color:#a3be8c;">yr975l8h</span><span>&quot;,
+</span><span>  &quot;</span><span style="color:#a3be8c;">isrange</span><span>&quot;: </span><span style="color:#d08770;">false</span><span>,
+</span><span>  &quot;</span><span style="color:#a3be8c;">issolvable</span><span>&quot;: </span><span style="color:#d08770;">true</span><span>,
+</span><span>  &quot;</span><span style="color:#a3be8c;">hasprivatekeys</span><span>&quot;: </span><span style="color:#d08770;">false
+</span><span>}
+</span></code></pre>
+<p>Aside from getting information about a descriptor, we can derive an address from a
+descriptor. To do that, use the following command:</p>
+<p><code>bitcoin-cli deriveaddresses &lt;descriptor&gt;</code></p>
+<p>Using the descriptor above, we get the following address:</p>
+<pre data-lang="json" style="background-color:#2b303b;color:#c0c5ce;" class="language-json "><code class="language-json" data-lang="json"><span>[
+</span><span>  &quot;</span><span style="color:#a3be8c;">bcrt1q2e4g8cetupxes7l95qstpxq8qnpml9ev6gjle2</span><span>&quot;
+</span><span>]
+</span></code></pre>
+<p>Finally, it is possible to import descriptors into another wallet using the <code>importdescriptors</code> command. </p>
+<p><code>bitcoin-cli -rpcwallet=vladitest importdescriptors '[{ &quot;desc&quot;: &quot;wpkh([0ee8ad5c/84'&quot;'&quot;'/1'&quot;'&quot;'/0'&quot;'&quot;'/0/0]0384fa1d3495ae000e6da98daef1b68dfb0730bd1275f2ede4342b013ed8cd15a2)#y8j0e2j6&quot;, &quot;timestamp&quot;:&quot;now&quot;, &quot;label&quot;: &quot;&quot; }]'</code></p>
+<p>Notice the <code>'&quot;'&quot;'</code> used to denote the hardened paths in the descriptor, consider this as an escape character. It is also worth mentioning that if you are importing a descriptor with public keys, you will need to create a wallet with private keys disabled by passing <code>disable_private_keys=true</code> as an argument. Bitcoin Core does not handle wallets which include some watch-only addresses and some private key-backed addresses. This is done so that the wallet doesn't generate a new address from the watch-only descriptor when you meant to generate a private key backed address, and then you find out funds received there are lost or unspendable.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>With the advent of wallet descriptors it will become very easy for wallet software to generate address or spend from a particular output script. These descriptors are extensible which means that if we suddenly have a new address/script type tomorrow, it will be easy to add it to this general structure.</p>
+<h2 id="resources">Resources</h2>
+<ul>
+<li><a href="https://achow101.com/2020/10/0.21-wallets">What's Coming To The Bitcoin Core Wallet in 0.21</a></li>
+<li><a href="https://river.com/learn/terms/z/zpub-extended-public-key/">Zpub (Extended Public Key)</a></li>
+<li><a href="https://river.com/learn/terms/y/ypub-extended-public-key/">Ypub (Extended Public Key</a></li>
+<li><a href="https://bitcoinops.org/en/topics/output-script-descriptors/">Output Descriptors</a></li>
+<li><a href="https://bitcoin.stackexchange.com/questions/99540/what-are-output-descriptors">Wallet Descriptors Stack Exchange</a></li>
+<li><a href="https://www.youtube.com/watch?v=xC25NzIjzog">Rethinking Wallet Architecture: Native Descriptor Wallets</a></li>
+<li><a href="https://github.com/BlockchainCommons/Learning-Bitcoin-from-the-Command-Line/blob/master/03_5_Understanding_the_Descriptor.md">Understanding the Descriptor</a></li>
+<li><a href="https://www.youtube.com/watch?v=kGM3DNtd_iw">Output Script Descriptors for Bitcoin</a></li>
+</ul>
+
+</div>
+
+    </div>
+  </section>
+</body>
+
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta property='og:title' content='Implications of Bitcoin Dust Limit on Lightning Channels'/>
+  <meta property='og:image' content='https:&#x2F;&#x2F;res.cloudinary.com&#x2F;vladimirfomene&#x2F;image&#x2F;upload&#x2F;c_scale,w_1028&#x2F;v1653069070&#x2F;blog&#x2F;bitcoin-dust.jpg'/>
+  <meta property='og:description' content='In the Lightning network whenever nodes create payments below the dust limit, the payment is not executed in a trustless manner using HTLCs. In this scenario, nodes work with trust between each other'/>
+  <meta property='og:url' content='https:&#x2F;&#x2F;www.vladimirfomene.com&#x2F;blog&#x2F;implications-of-bitcoin-dust-on-lightning&#x2F;'/>
+  <title>Bitcoin | Lightning Bytes</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+  <header>
+    <nav>
+      <div>
+        <span id="name"><a href="/">Vladimir Fomene</a></span>
+        <span id="github" class="social-icon"><a href="https://github.com/vladimirfomene"><i class="fa fa-github-square"
+              style="font-size:48px;"></i></a></span>
+        <span id="twitter" class="social-icon"><a href="https://twitter.com/Vlad_kwasi"><i class="fa fa-twitter"
+              style="font-size:48px;"></i></a></span>
+        <span id="linkedin" class="social-icon"><a href="https://www.linkedin.com/in/vladimirfomene/"><i
+              class="fa fa-linkedin" style="font-size:48px;"></i></a></span>
+      </div>
+    </nav>
+  </header>
+  <aside>
+    <ul>
+      <li><a href="https://vladimirfomene.com/blog/">Blog</a></li>
+      <li><a href="https://vladimirfomene.com/project/">Projects</a></li>
+      <li><a href="https://vladimirfomene.com/talk/">Talks</a></li>
+    </ul>
+  </aside>
+  <section class="section">
+    <div class="container">
+      
+<div id="section">
+  <h1 class="title">
+    Implications of Bitcoin Dust Limit on Lightning Channels
+  </h1>
+  <p class="subtitle"><strong>2022-05-03</strong></p>
+  <h3 id="introduction">Introduction</h3>
+<p>Welcome back to the blog! This week, I'm taking you on a debugging journey where we will be learning about Bitcoin dust, how it is calculated and its implication for the Lightning network. Before we dive into the meat of the subject, let me set the stage. This week while trying to open a payment channel from an <a href="https://lightningdevkit.org/">LDK</a> node to an <a href="https://github.com/lightningnetwork/lnd">LND</a> node setup in <a href="https://lightningpolar.com/">Polar</a>, I had the following error:</p>
+<pre data-lang="sh" style="background-color:#2b303b;color:#c0c5ce;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#bf616a;">Channel </span><span>&lt;channelID&gt; closed due to processingError
+</span><span>{ </span><span style="color:#bf616a;">err: </span><span>&quot;</span><span style="color:#a3be8c;">dust_limit_satoshis (573) is greater than the implementation limit (546)</span><span>&quot; }
+</span><span>
+</span></code></pre>
+<p>On seeing this error, I was intrigued. What is the meaning of dust? What does the <code>dust_limit_satoshis</code> represent in Lightning? Why is the dust_limit_satoshis <code>573</code> and why is the implementation limit <code>546</code>. How are these calculated?</p>
+<h3 id="what-is-the-dust-and-what-does-it-represent">What is the dust and what does it represent?</h3>
+<p>In Bitcoin, a UTXO is considered dust when the fee required to spend it is greater than the amount on the UTXO. Bitcoin Core considers a UTXO as dust if it's value is lower than the cost of spending it at the <a href="https://github.com/bitcoin/bitcoin/commit/9022aa3">dustrelayfee</a>. In Bitcoin Core, this <code>dustrelayfee</code> can be set by a commandline argument <code>-dustrelayfee</code>. Additionally, Bitcoin Core default <code>dustrelayfee</code> is 3000 sat/kB. For a P2PKH transaction, the dust limit is calculated as follows:</p>
+<p>A P2PKH output is 34 bytes:</p>
+<ul>
+<li>8 bytes for the output amount</li>
+<li>1 byte for the script length</li>
+<li>25 bytes for the script (<code>OP_DUP</code> <code>OP_HASH160</code> <code>20</code> 20-bytes <code>OP_EQUALVERIFY</code> <code>OP_CHECKSIG</code>). Each opcode is 1 byte in size.</li>
+</ul>
+<p>A P2PKH input is at least 148 bytes:</p>
+<ul>
+<li>36 bytes for the previous output (32 bytes hash + 4 bytes index)</li>
+<li>4 bytes for the sequence</li>
+<li>1 byte for the script sig length</li>
+<li>107 bytes for the script sig:
+<ul>
+<li>1 byte for the items count</li>
+<li>1 byte for the signature length</li>
+<li>71 bytes for the signature</li>
+<li>1 byte for the public key length</li>
+<li>33 bytes for the public key</li>
+</ul>
+</li>
+</ul>
+<p>The P2PKH dust limit is then <code>(34 + 148) * 3000 / 1000 = 546 satoshis</code>. This is just the  <code>(input-size + output-size) * fee-per-byte</code> .</p>
+<p>Here are the dust limit for the other transaction types in Core:</p>
+<ul>
+<li>pay to script hash (P2SH): 540 satoshis</li>
+<li>pay to witness pubkey hash (P2WPKH): 294 satoshis</li>
+<li>pay to witness script hash (P2WSH): 330 satoshis</li>
+<li>unknown segwit versions: 354 satoshis</li>
+</ul>
+<p>Does this mean dust is unspendable? Not really, it can be spent with other input(s) provided this other input(s) can provide value to make the transaction fee greater than the minimum relay fee. In case you are interested in reading more about how these calculations are made, you can read more <a href="https://github.com/lightning/bolts/blob/master/03-transactions.md">here</a></p>
+<h3 id="why-is-it-set-at-546-satoshis-for-the-ldk-node">Why is it set at 546 satoshis for the LDK node?</h3>
+<p>I tracked down the error message above in LDK's <a href="https://github.com/lightningdevkit/rust-lightning/blob/main/lightning/src/ln/channel.rs#L1961">source code</a>  and this error comes from a method called <code>accept_channel</code>. In this function, there is condition that requires the dust limit to be below  <code>MAX_CHAN_DUST_LIMIT_SATOSHIS</code> set to <code>546</code> in LDK. This makes sense because it is the largest dust limit from the previous section on dust limit calculation in Bitcoin Core. </p>
+<p>Where is the <code>573</code> coming from you? In Lightning, channel establement between two nodes is a six step process as shown below</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>   +-------+                              +-------+
+</span><span>    |       |--(1)---  open_channel  -----&gt;|       |
+</span><span>    |       |&lt;-(2)--  accept_channel  -----|       |
+</span><span>    |       |                              |       |
+</span><span>    |   A   |--(3)--  funding_created  ---&gt;|   B   |
+</span><span>    |       |&lt;-(4)--  funding_signed  -----|       |
+</span><span>    |       |                              |       |
+</span><span>    |       |--(5)--- funding_locked  ----&gt;|       |
+</span><span>    |       |&lt;-(6)--- funding_locked  -----|       |
+</span><span>    +-------+                              +-------+
+</span><span>
+</span><span>    - where node A is &#39;funder&#39; and node B is &#39;fundee&#39;
+</span></code></pre>
+<p><a href="https://github.com/lightning/bolts/blob/master/02-peer-protocol.md">source</a></p>
+<p>Following this flow, when I executed the <code>openchannel</code> command on the CLI of the LDK node, it sent an <code>open_channel</code> message to the LND node. As soon as LND node received the <code>open_channel</code> message, it processed it and replied with an <code>accept_channel</code> message containing a <code>dust_satoshis_limit</code> value of <code>573</code>.</p>
+<h3 id="why-is-it-set-at-573-satoshis-for-the-lnd-node">Why is it set at 573 satoshis for the LND node?</h3>
+<p>According to <a href="https://github.com/bitcoin/bitcoin/blob/v0.10.0rc3/src/primitives/transaction.h#L137">Bitcoin Core v0.10 release candidate 3</a>, an output is considered dust if you will pay 1/3 of its values in fees. Assuming we want to construct a transaction to spend this dust, a typical output is 34 bytes in size and will require an input of 148 bytes to be spend it. According to the comment in Bitcoin Core, the dust limit is 546 satoshis. How did they get that? If we consider a one input and one output transaction, which will be the transaction with the least weight necessary to spend an output, the size of the transaction is <code>148 + 34 = 182</code> At a 1 satoshi/byte rate, this transaction will cost 182 sats. What is the fee of the output for which we will pay 182 sats to spend it? </p>
+<p><code>182 * 3 = 546 sats</code></p>
+<p>According this <a href="https://bitcoin.stackexchange.com/questions/1195/how-to-calculate-transaction-size-before-sending-legacy-non-segwit-p2pkh-p2sh">Stack Exchange</a>, there is always a 10 bytes extra bytes added to the transaction and there is also a &quot;plus or minus 1&quot; byte added for the signature. Given this information, we adjust our calculation of the size of a one input, one output transaction as follows:</p>
+<p><code>148 + 34 + 10 = 192 bytes </code> </p>
+<p>Following the &quot;plus or minus 1&quot; rule we choose to substract one byte and we get <code>191</code> bytes. At a 1 satoshi/byte rate, this transaction will cost 192 sats. What is the fee of the output for which we will pay 192 sats to spend it?</p>
+<p><code>192 * 3 = 573 sats</code></p>
+<p>This is how LNDv0.12.1-beta's <code>dust_satoshis_limit</code> was calculated and set to <code>573</code>.</p>
+<h3 id="final-analysis-of-the-bug">Final analysis of the bug</h3>
+<p>The LDK node refused to open a channel with the LND node because LDK's dust limit is 546 and LND's dust limit is 573. As such, if a payment of 550 sats (above the dust limit) is made from LDK, LND will consider it as dust (below the dust limit) and will apply the policy for payments below dust in Lightning, whereas the LDK node is not expecting that payment to be treated as below dust. Therefore having different dust limit values will cause a misalignement on how the payment should be processed.</p>
+<h3 id="what-are-the-implications-the-dust-limit-on-lightning-channels">What are the implications the dust limit on Lightning channels?</h3>
+<p>The Lightning protocol does not create an HTLC output for payments below the <code>dust_satoshis_limit</code>. To understand what happens to these payments let's look at an example. Let's say Nana and Ama have a payment channel with each other and Nana wants to route a payment below the  <code>dust_satoshis_limit</code> through Ama. Assumming the current state of the channel has 10000 sats on Nana's side and 6000 sats on Ama's side.</p>
+<p><img src="https://dev-to-uploads.s3.amazonaws.com/uploads/articles/43qhjuv307fn0d1zhyz4.png" alt="Initial Channel State" /></p>
+<p>When Nana routes a payment of 200 sats through Ama, the commitment transaction of the channel will be as follow:</p>
+<p><img src="https://dev-to-uploads.s3.amazonaws.com/uploads/articles/tahzq97aozxn6wmz17eg.png" alt="Payment Under Dust limit" /></p>
+<p>From the diagram, you can see that no HTLC output was created for this payment. On the otherhand, Nana's balance has been deducted by 200 sats and that value has been implicitly added to the fee of this transaction. Once Ama gets the preimage for this payment, she will give it to Nana, and they will transition commitment transaction to a state where the 200 sats has been added to Ama's output. </p>
+<p><img src="https://dev-to-uploads.s3.amazonaws.com/uploads/articles/dsyc7e7f8hpzrqwbnidb.png" alt="Commitment Transaction After Ama receives preimage" /></p>
+<p>The issue with this process is that it requires Nana to trust Ama after putting his 200 sats as transaction fee, but what if Ama was a bad actor. She could decide to forcefully close the channel and Nana will loose his money to a miner on onchain fees. In other words, the protocol does not protect Nana when a payment is below the <code>dust_satoshis_limit</code>.</p>
+<p>What are the implications? Well this means, channel partners cannot carry out micropayments below the dust limit in a trustless way. Therefore this puts a security risk on anyone paying or routing a payment under the dust limit.</p>
+<h3 id="conclusion">Conclusion</h3>
+<p>In this article, we explored the bug I had while trying to open a channel from an LDK node to an LND node. This bug made us explore an important concept in Bitcoin and Lightning called dust limit. We also saw how payments under the dust limit don't create HTLC output as transaction with outputs under the dust limit are not viable on-chain as they will not be relayed by nodes. </p>
+<h3 id="resources">Resources</h3>
+<p><a href="https://github.com/lightning/bolts/blob/master/02-peer-protocol.md">Lightning Peer Protocol Bolt</a>
+<a href="https://github.com/lightning/bolts/blob/master/03-transactions.md">Transaction Bolt</a>
+<a href="https://bitcoin.stackexchange.com/questions/87735/how-can-i-create-htlcs-below-dust-limit-satoshi-in-lightning-network">Rene Pickhardt's Bitcoin StackExchange</a>
+<a href="https://bitcoin.stackexchange.com/questions/85650/htlcs-dont-work-for-micropayments">David Harding's Bitcoin StackExchange</a>
+<a href="https://medium.com/@peter_r/visualizing-htlcs-and-the-lightning-networks-dirty-little-secret-cb9b5773a0">Lightning dirty little secrets</a>
+<a href="https://www.reddit.com/r/Bitcoin/comments/2unzen/what_is_bitcoins_dust_limit_precisely/">What is Bitcoin's dust limit, precisely?</a></p>
+
+</div>
+
+    </div>
+  </section>
+</body>
+
+</html>
